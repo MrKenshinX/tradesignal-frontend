@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Menu, X, Zap, BarChart2, TrendingUp, BookOpen, LogOut, User, Crown } from 'lucide-react';
+import { Menu, X, Zap, LogOut, BarChart2, TrendingUp, ChevronDown } from 'lucide-react';
 import { useAuthStore } from '@/store/auth';
 import { PLAN_DISPLAY, PLAN_COLOR } from '@/types';
 
@@ -30,126 +30,166 @@ export function Navbar() {
   }, []);
 
   return (
-    <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-      scrolled
-        ? 'bg-[#060B18]/92 backdrop-blur-xl border-b border-[#00D4FF]/8 shadow-[0_4px_30px_rgba(0,0,0,0.4)]'
-        : 'bg-transparent'
-    }`}>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
+    <>
+      <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
+        scrolled
+          ? 'py-2'
+          : 'py-3'
+      }`}>
+        {/* Glass background */}
+        <div className={`absolute inset-0 transition-all duration-500 ${
+          scrolled
+            ? 'bg-[#060B18]/85 backdrop-blur-2xl border-b border-white/5 shadow-[0_4px_30px_rgba(0,0,0,0.5)]'
+            : 'bg-transparent'
+        }`} />
 
-          {/* Logo */}
-          <Link href="/" className="flex items-center gap-2 group shrink-0">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#00D4FF] to-[#7B2FFF] flex items-center justify-center shadow-glow-cyan-sm group-hover:shadow-glow-cyan transition-all duration-300">
-              <Zap size={15} className="text-white" fill="white" />
-            </div>
-            <span className="font-display font-black text-base tracking-wide">
-              <span className="text-[#00D4FF]">TRADE</span>
-              <span className="text-white">SIGNAL</span>
-              <span className="text-[#7B2FFF] text-[10px] ml-1 font-mono font-bold">PRO</span>
-            </span>
-          </Link>
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-14">
 
-          {/* Desktop Nav */}
-          <div className="hidden md:flex items-center gap-0.5">
-            {NAV_LINKS.map((link) => (
-              <Link key={link.href} href={link.href}
-                className={`px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
-                  pathname === link.href
-                    ? 'text-[#00D4FF] bg-[#00D4FF]/10'
-                    : 'text-[#8BA8C2] hover:text-white hover:bg-white/5'
-                }`}>
-                {link.label}
-              </Link>
-            ))}
-          </div>
-
-          {/* Auth / User */}
-          <div className="hidden md:flex items-center gap-2">
-            {user ? (
-              <div className="relative">
-                <button onClick={() => setUserMenuOpen(!userMenuOpen)}
-                  className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-white/5 transition-all">
-                  <div className="w-7 h-7 rounded-full bg-gradient-to-br from-[#00D4FF] to-[#7B2FFF] flex items-center justify-center">
-                    <span className="text-white text-[10px] font-bold">{user.name?.[0]?.toUpperCase()}</span>
-                  </div>
-                  <div className="text-left">
-                    <p className="text-white text-xs font-semibold">{user.name}</p>
-                    <p className={`text-[10px] font-medium ${PLAN_COLOR[user.plan]}`}>{PLAN_DISPLAY[user.plan]}</p>
-                  </div>
-                </button>
-                {userMenuOpen && (
-                  <div className="absolute right-0 top-full mt-1 w-48 glass border border-white/10 rounded-xl shadow-card overflow-hidden">
-                    <Link href="/dashboard" onClick={() => setUserMenuOpen(false)}
-                      className="flex items-center gap-2 px-4 py-2.5 text-sm text-[#8BA8C2] hover:text-white hover:bg-white/5 transition-colors">
-                      <BarChart2 size={14} /> Dashboard
-                    </Link>
-                    <Link href="/portfolio" onClick={() => setUserMenuOpen(false)}
-                      className="flex items-center gap-2 px-4 py-2.5 text-sm text-[#8BA8C2] hover:text-white hover:bg-white/5 transition-colors">
-                      <TrendingUp size={14} /> Portfolio
-                    </Link>
-                    <div className="border-t border-white/5" />
-                    <button onClick={() => { logout(); setUserMenuOpen(false); }}
-                      className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-[#FF4757] hover:bg-[#FF4757]/10 transition-colors">
-                      <LogOut size={14} /> Keluar
-                    </button>
-                  </div>
-                )}
+            {/* Logo */}
+            <Link href="/" className="flex items-center gap-2.5 group shrink-0">
+              <div className="relative w-9 h-9 rounded-xl overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-br from-[#00D4FF] to-[#7B2FFF]" />
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <Zap size={16} className="text-white" fill="white" />
+                </div>
+                <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity" />
               </div>
-            ) : (
-              <>
-                <Link href="/auth/login" className="text-sm text-[#8BA8C2] hover:text-white transition-colors px-3 py-2">
-                  Masuk
-                </Link>
-                <Link href="/auth/register"
-                  className="text-sm font-bold px-4 py-2 rounded-lg bg-gradient-to-r from-[#00D4FF] to-[#7B2FFF] text-white hover:opacity-90 transition-opacity shadow-glow-cyan-sm">
-                  Mulai Gratis
-                </Link>
-              </>
-            )}
-          </div>
+              <div className="flex flex-col leading-none">
+                <span className="font-display font-black text-sm tracking-widest">
+                  <span className="text-[#00D4FF]">TRADE</span><span className="text-white">SIGNAL</span>
+                </span>
+                <span className="text-[#7B2FFF] text-[9px] font-mono font-bold tracking-[0.3em] uppercase">Pro Platform</span>
+              </div>
+            </Link>
 
-          {/* Mobile Toggle */}
-          <button className="md:hidden p-2 text-[#8BA8C2] hover:text-white" onClick={() => setMobileOpen(!mobileOpen)}>
-            {mobileOpen ? <X size={22} /> : <Menu size={22} />}
-          </button>
-        </div>
-      </div>
+            {/* Desktop Nav — pill container */}
+            <div className="hidden lg:flex items-center gap-1 px-2 py-1.5 rounded-2xl bg-white/4 border border-white/8 backdrop-blur-sm">
+              {NAV_LINKS.map((link) => {
+                const isActive = pathname === link.href;
+                return (
+                  <Link key={link.href} href={link.href}
+                    className={`relative px-3.5 py-1.5 rounded-xl text-[13px] font-medium transition-all duration-200 ${
+                      isActive
+                        ? 'text-white'
+                        : 'text-[#8BA8C2] hover:text-white'
+                    }`}>
+                    {isActive && (
+                      <span className="absolute inset-0 rounded-xl bg-gradient-to-r from-[#00D4FF]/20 to-[#7B2FFF]/20 border border-[#00D4FF]/25" />
+                    )}
+                    <span className="relative z-10">{link.label}</span>
+                  </Link>
+                );
+              })}
+            </div>
 
-      {/* Mobile Menu */}
-      {mobileOpen && (
-        <div className="md:hidden border-t border-[#00D4FF]/10" style={{ background: 'rgba(6,11,24,0.97)', backdropFilter: 'blur(20px)' }}>
-          <div className="px-4 py-4 space-y-1">
-            {NAV_LINKS.map((link) => (
-              <Link key={link.href} href={link.href} onClick={() => setMobileOpen(false)}
-                className={`block px-4 py-3 rounded-xl text-sm font-medium transition-all ${
-                  pathname === link.href ? 'text-[#00D4FF] bg-[#00D4FF]/10' : 'text-[#8BA8C2] hover:text-white hover:bg-white/5'
-                }`}>
-                {link.label}
-              </Link>
-            ))}
-            <div className="pt-4 space-y-2">
+            {/* Right side */}
+            <div className="hidden lg:flex items-center gap-2.5">
+              {/* Live indicator */}
+              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#00E676]/8 border border-[#00E676]/20 text-[#00E676] text-[11px] font-mono font-semibold">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#00E676] animate-pulse" />
+                LIVE
+              </div>
+
               {user ? (
-                <button onClick={() => { logout(); setMobileOpen(false); }}
-                  className="w-full text-center py-2.5 rounded-xl border border-[#FF4757]/30 text-[#FF4757] text-sm font-medium">
-                  Keluar
-                </button>
+                <div className="relative">
+                  <button onClick={() => setUserMenuOpen(!userMenuOpen)}
+                    className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/5 border border-white/10 hover:bg-white/8 hover:border-white/15 transition-all">
+                    <div className="w-6 h-6 rounded-lg bg-gradient-to-br from-[#00D4FF] to-[#7B2FFF] flex items-center justify-center shrink-0">
+                      <span className="text-white text-[10px] font-black">{user.name?.[0]?.toUpperCase()}</span>
+                    </div>
+                    <span className="text-white text-xs font-semibold max-w-[80px] truncate">{user.name}</span>
+                    <ChevronDown size={12} className={`text-[#4A6080] transition-transform ${userMenuOpen ? 'rotate-180' : ''}`} />
+                  </button>
+                  {userMenuOpen && (
+                    <div className="absolute right-0 top-full mt-2 w-52 rounded-xl border border-white/10 shadow-card overflow-hidden z-50"
+                      style={{ background: 'rgba(10,17,40,0.97)', backdropFilter: 'blur(20px)' }}>
+                      <div className="px-4 py-3 border-b border-white/5">
+                        <p className="text-white text-sm font-semibold">{user.name}</p>
+                        <p className={`text-xs ${PLAN_COLOR[user.plan]}`}>{PLAN_DISPLAY[user.plan]}</p>
+                      </div>
+                      <Link href="/dashboard" onClick={() => setUserMenuOpen(false)}
+                        className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-[#8BA8C2] hover:text-white hover:bg-white/5 transition-colors">
+                        <BarChart2 size={13} /> Dashboard
+                      </Link>
+                      <Link href="/portfolio" onClick={() => setUserMenuOpen(false)}
+                        className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-[#8BA8C2] hover:text-white hover:bg-white/5 transition-colors">
+                        <TrendingUp size={13} /> Portfolio
+                      </Link>
+                      <div className="border-t border-white/5" />
+                      <button onClick={() => { logout(); setUserMenuOpen(false); }}
+                        className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-[#FF4757] hover:bg-[#FF4757]/8 transition-colors">
+                        <LogOut size={13} /> Keluar
+                      </button>
+                    </div>
+                  )}
+                </div>
               ) : (
                 <>
-                  <Link href="/auth/login" onClick={() => setMobileOpen(false)}
-                    className="block text-center py-2.5 rounded-xl border border-[#00D4FF]/30 text-[#00D4FF] text-sm font-medium">
+                  <Link href="/auth/login"
+                    className="px-4 py-2 rounded-xl text-[13px] text-[#8BA8C2] hover:text-white font-medium transition-colors">
                     Masuk
                   </Link>
-                  <Link href="/auth/register" onClick={() => setMobileOpen(false)}
-                    className="block text-center py-2.5 rounded-xl bg-gradient-to-r from-[#00D4FF] to-[#7B2FFF] text-white text-sm font-bold">
-                    Mulai Gratis
+                  <Link href="/auth/register"
+                    className="relative px-5 py-2 rounded-xl text-[13px] font-bold text-white overflow-hidden group">
+                    <div className="absolute inset-0 bg-gradient-to-r from-[#00D4FF] to-[#7B2FFF]" />
+                    <div className="absolute inset-0 bg-gradient-to-r from-[#7B2FFF] to-[#00D4FF] opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                    <span className="relative z-10 flex items-center gap-1.5">
+                      <Zap size={12} fill="white" />
+                      Mulai Gratis
+                    </span>
                   </Link>
                 </>
               )}
             </div>
+
+            {/* Mobile toggle */}
+            <button className="lg:hidden relative w-9 h-9 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-[#8BA8C2] hover:text-white transition-colors"
+              onClick={() => setMobileOpen(!mobileOpen)}>
+              {mobileOpen ? <X size={18} /> : <Menu size={18} />}
+            </button>
           </div>
         </div>
-      )}
-    </nav>
+
+        {/* Mobile Menu */}
+        {mobileOpen && (
+          <div className="lg:hidden absolute top-full left-0 right-0 border-t border-white/5 z-40"
+            style={{ background: 'rgba(6,11,24,0.98)', backdropFilter: 'blur(24px)' }}>
+            <div className="max-w-7xl mx-auto px-4 py-4 space-y-1">
+              {NAV_LINKS.map((link) => (
+                <Link key={link.href} href={link.href} onClick={() => setMobileOpen(false)}
+                  className={`flex items-center justify-between px-4 py-3 rounded-xl text-sm font-medium transition-all ${
+                    pathname === link.href
+                      ? 'bg-gradient-to-r from-[#00D4FF]/15 to-[#7B2FFF]/15 text-[#00D4FF] border border-[#00D4FF]/20'
+                      : 'text-[#8BA8C2] hover:text-white hover:bg-white/5'
+                  }`}>
+                  {link.label}
+                  {pathname === link.href && <span className="w-1.5 h-1.5 rounded-full bg-[#00D4FF]" />}
+                </Link>
+              ))}
+              <div className="pt-3 grid grid-cols-2 gap-2">
+                {user ? (
+                  <button onClick={() => { logout(); setMobileOpen(false); }}
+                    className="col-span-2 py-3 rounded-xl border border-[#FF4757]/30 text-[#FF4757] text-sm font-semibold">
+                    Keluar
+                  </button>
+                ) : (
+                  <>
+                    <Link href="/auth/login" onClick={() => setMobileOpen(false)}
+                      className="py-3 rounded-xl border border-white/12 text-[#8BA8C2] text-sm font-medium text-center hover:border-[#00D4FF]/30 hover:text-white transition-all">
+                      Masuk
+                    </Link>
+                    <Link href="/auth/register" onClick={() => setMobileOpen(false)}
+                      className="py-3 rounded-xl bg-gradient-to-r from-[#00D4FF] to-[#7B2FFF] text-white text-sm font-bold text-center">
+                      Mulai Gratis
+                    </Link>
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+      </nav>
+    </>
   );
 }
