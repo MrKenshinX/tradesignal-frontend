@@ -86,9 +86,9 @@ const LEVEL_COLOR: Record<string, string> = {
 };
 
 export default function EdukasiModulePage({ params }: { params: { slug: string } }) {
-  const module = MODULES[params.slug];
+  const eduModule = MODULES[params.slug];
 
-  if (!module) {
+  if (!eduModule) {
     return (
       <>
         <Navbar />
@@ -113,19 +113,19 @@ export default function EdukasiModulePage({ params }: { params: { slug: string }
           </Link>
 
           <div className="mb-2 flex items-center gap-3">
-            <span className={`text-[10px] font-semibold px-2.5 py-1 rounded-full border ${LEVEL_COLOR[module.level]}`}>
-              {module.level}
+            <span className={`text-[10px] font-semibold px-2.5 py-1 rounded-full border ${LEVEL_COLOR[eduModule.level]}`}>
+              {eduModule.level}
             </span>
             <span className="flex items-center gap-1 text-[#4A6080] text-xs">
-              <Clock size={11} /> {module.duration}
+              <Clock size={11} /> {eduModule.duration}
             </span>
           </div>
 
-          <h1 className="text-2xl sm:text-3xl font-display font-bold text-white mb-4">{module.title}</h1>
-          <p className="text-[#8BA8C2] leading-relaxed mb-8 pb-8 border-b border-white/5">{module.intro}</p>
+          <h1 className="text-2xl sm:text-3xl font-display font-bold text-white mb-4">{eduModule.title}</h1>
+          <p className="text-[#8BA8C2] leading-relaxed mb-8 pb-8 border-b border-white/5">{eduModule.intro}</p>
 
           <div className="space-y-6">
-            {module.sections.map((s, i) => (
+            {eduModule.sections.map((s, i) => (
               <div key={i} className="p-6 rounded-2xl glass border border-white/8 hover:border-[#00D4FF]/15 transition-colors">
                 <div className="flex items-center gap-3 mb-3">
                   <div className="w-7 h-7 rounded-lg bg-[#00D4FF]/15 border border-[#00D4FF]/25 flex items-center justify-center shrink-0">
