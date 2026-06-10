@@ -3,6 +3,7 @@ import { useState, useMemo } from 'react';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
 import { SWRProvider } from '@/components/providers/SWRProvider';
+import { AuthGuard } from '@/components/auth/AuthGuard';
 import { useMarketIDN, useMarketCrypto, useMarketAsing } from '@/hooks/useMarketData';
 import { Search, SlidersHorizontal, TrendingUp, TrendingDown } from 'lucide-react';
 import type { MarketData } from '@/types';

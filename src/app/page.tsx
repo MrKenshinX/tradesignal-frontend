@@ -4,6 +4,7 @@ import { LiveTickerBar } from '@/components/landing/LiveTickerBar';
 import { HeroSection } from '@/components/landing/HeroSection';
 import { StatsSection } from '@/components/landing/StatsSection';
 import { FeaturesSection } from '@/components/landing/FeaturesSection';
+import { LiveSignalsPreview } from '@/components/landing/LiveSignalsPreview';
 import { PricingSection } from '@/components/landing/PricingSection';
 import { TestimonialsSection } from '@/components/landing/TestimonialsSection';
 import { CTASection } from '@/components/landing/CTASection';
@@ -17,6 +18,7 @@ export default function HomePage() {
       <HeroSection />
       <StatsSection />
       <FeaturesSection />
+      <LiveSignalsPreview />
       <TestimonialsSection />
       <PricingSection />
       <CTASection />

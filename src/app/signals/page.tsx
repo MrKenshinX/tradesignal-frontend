@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
 import { SWRProvider } from '@/components/providers/SWRProvider';
+import { AuthGuard } from '@/components/auth/AuthGuard';
 import { SignalCard } from '@/components/signals/SignalCard';
 import { useSignals } from '@/hooks/useMarketData';
 import { Zap, RefreshCw, Search } from 'lucide-react';

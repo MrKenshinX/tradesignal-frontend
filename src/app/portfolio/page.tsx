@@ -2,6 +2,7 @@
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
 import { SWRProvider } from '@/components/providers/SWRProvider';
+import { AuthGuard } from '@/components/auth/AuthGuard';
 import { usePortfolio } from '@/hooks/useMarketData';
 import { TrendingUp, TrendingDown, BarChart2, Plus } from 'lucide-react';
 import Link from 'next/link';
