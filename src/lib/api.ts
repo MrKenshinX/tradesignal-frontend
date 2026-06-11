@@ -82,8 +82,8 @@ export const fetchers = {
     return normalizeSignals(res.data.data ?? []);
   },
   portfolio: async (): Promise<PortfolioPosition[]> => {
-    const res = await api.get<ApiResponse<PortfolioPosition[]>>('/api/portfolio');
-    return res.data.data ?? [];
+    const res = await api.get<{ success: boolean; data?: { positions?: PortfolioPosition[] } }>('/api/portfolio');
+    return res.data.data?.positions ?? [];
   },
   me: async (): Promise<User | null> => {
     const res = await api.get<{ success: boolean; user: User }>('/api/auth/me');
