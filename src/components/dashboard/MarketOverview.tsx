@@ -71,7 +71,7 @@ export function MarketOverview() {
                           item.change_pct >= 0 ? 'text-[#00E676]' : 'text-[#FF4757]'
                         }`}>
                           {item.change_pct >= 0 ? <TrendingUp size={11} /> : <TrendingDown size={11} />}
-                          {item.change_pct >= 0 ? '+' : ''}{item.change_pct.toFixed(2)}%
+                          {Number(item.change_pct ?? 0) >= 0 ? "+" : ""}{Number(item.change_pct ?? 0).toFixed(2)}%
                         </span>
                       ) : (
                         <span className="text-[#4A6080] font-mono text-xs">—</span>

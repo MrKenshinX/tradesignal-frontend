@@ -42,22 +42,44 @@ api.interceptors.response.use(
 // GET /api/auth/me          → { success, user: User }
 // =============================================
 
+// Normalize numeric fields that Postgres returns as strings
+function normalizeMarket(rows: MarketData[]): MarketData[] {
+  return (rows ?? []).map((r) => ({
+    ...r,
+    price: r.price != null ? Number(r.price) : null,
+    change_pct: r.change_pct != null ? Number(r.change_pct) : null,
+  }));
+}
+
+function normalizeSignals(rows: Signal[]): Signal[] {
+  return (rows ?? []).map((r) => ({
+    ...r,
+    price_entry: r.price_entry != null ? Number(r.price_entry) : null,
+    price_target: r.price_target != null ? Number(r.price_target) : null,
+    price_stop_loss: r.price_stop_loss != null ? Number(r.price_stop_loss) : null,
+    confidence: r.confidence != null ? Number(r.confidence) : null,
+    score: r.score != null ? Number(r.score) : 0,
+    rsi: r.rsi != null ? Number(r.rsi) : null,
+    adx: r.adx != null ? Number(r.adx) : null,
+  }));
+}
+
 export const fetchers = {
   marketIDN: async (): Promise<MarketData[]> => {
     const res = await api.get<ApiResponse<MarketData[]>>('/api/market/idn');
-    return res.data.data ?? [];
+    return normalizeMarket(res.data.data ?? []);
   },
   marketAsing: async (): Promise<MarketData[]> => {
     const res = await api.get<ApiResponse<MarketData[]>>('/api/market/asing');
-    return res.data.data ?? [];
+    return normalizeMarket(res.data.data ?? []);
   },
   marketCrypto: async (): Promise<MarketData[]> => {
     const res = await api.get<ApiResponse<MarketData[]>>('/api/market/crypto');
-    return res.data.data ?? [];
+    return normalizeMarket(res.data.data ?? []);
   },
   signals: async (): Promise<Signal[]> => {
     const res = await api.get<ApiResponse<Signal[]>>('/api/signals');
-    return res.data.data ?? [];
+    return normalizeSignals(res.data.data ?? []);
   },
   portfolio: async (): Promise<PortfolioPosition[]> => {
     const res = await api.get<ApiResponse<PortfolioPosition[]>>('/api/portfolio');

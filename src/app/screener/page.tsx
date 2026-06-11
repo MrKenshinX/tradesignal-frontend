@@ -127,7 +127,7 @@ function ScreenerContent() {
                           {d.change_pct != null ? (
                             <span className={`flex items-center justify-end gap-1 font-mono text-xs font-bold ${d.change_pct >= 0 ? 'text-[#00E676]' : 'text-[#FF4757]'}`}>
                               {d.change_pct >= 0 ? <TrendingUp size={11} /> : <TrendingDown size={11} />}
-                              {d.change_pct >= 0 ? '+' : ''}{d.change_pct.toFixed(2)}%
+                              {Number(d.change_pct ?? 0) >= 0 ? "+" : ""}{Number(d.change_pct ?? 0).toFixed(2)}%
                             </span>
                           ) : <span className="text-[#4A6080] font-mono text-xs">—</span>}
                         </td>
