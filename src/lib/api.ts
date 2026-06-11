@@ -6,7 +6,7 @@
 import axios from 'axios';
 import type { ApiResponse, Signal, MarketData, PortfolioPosition, User } from '@/types';
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || '';
 
 export const api = axios.create({
   baseURL: API_BASE,
