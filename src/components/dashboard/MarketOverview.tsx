@@ -62,7 +62,7 @@ export function MarketOverview() {
                     </td>
                     <td className="px-4 py-3 text-right font-mono font-bold text-sm text-white">
                       {item.price != null
-                        ? item.price.toLocaleString('id-ID', { maximumFractionDigits: 4 })
+                        ? Number(item.price).toLocaleString('id-ID', { maximumFractionDigits: 4 })
                         : '—'}
                     </td>
                     <td className="px-5 py-3 text-right">

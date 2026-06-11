@@ -54,7 +54,7 @@ export function LiveSignalsPreview() {
               const isBuy = action === 'BUY';
               const isSell = action === 'SELL';
               const isLocked = i >= 3; // Lock signals 4, 5, 6
-              const confidence = signal.confidence ?? 0;
+              const confidence = Number(signal.confidence ?? 0);
 
               return (
                 <div key={signal.id}
@@ -89,7 +89,7 @@ export function LiveSignalsPreview() {
                     <div>
                       <p className="text-[#4A6080] text-[9px] uppercase tracking-wider mb-0.5">Entry Price</p>
                       <p className="font-mono font-black text-xl text-white">
-                        {signal.price_entry?.toLocaleString('id-ID', { maximumFractionDigits: 4 }) ?? '—'}
+                        {signal.price_entry != null ? Number(signal.price_entry).toLocaleString('id-ID', { maximumFractionDigits: 4 }) : '—'}
                       </p>
                     </div>
                     <div className="text-right">
@@ -114,7 +114,7 @@ export function LiveSignalsPreview() {
                         <span className="text-[8px] text-[#FF4757] font-bold uppercase">Stop Loss</span>
                       </div>
                       <span className="font-mono text-xs font-bold text-white">
-                        {signal.price_stop_loss?.toLocaleString('id-ID', { maximumFractionDigits: 4 }) ?? '—'}
+                        {signal.price_stop_loss != null ? Number(signal.price_stop_loss).toLocaleString('id-ID', { maximumFractionDigits: 4 }) : '—'}
                       </span>
                     </div>
                     <div className="p-2 rounded-xl" style={{ background: 'rgba(0,230,118,0.06)', border: '1px solid rgba(0,230,118,0.12)' }}>
@@ -123,7 +123,7 @@ export function LiveSignalsPreview() {
                         <span className="text-[8px] text-[#00E676] font-bold uppercase">Take Profit</span>
                       </div>
                       <span className="font-mono text-xs font-bold text-white">
-                        {signal.price_target?.toLocaleString('id-ID', { maximumFractionDigits: 4 }) ?? '—'}
+                        {signal.price_target != null ? Number(signal.price_target).toLocaleString('id-ID', { maximumFractionDigits: 4 }) : '—'}
                       </span>
                     </div>
                   </div>

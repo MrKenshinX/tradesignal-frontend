@@ -121,7 +121,7 @@ function ScreenerContent() {
                           <span className="text-[10px] font-mono text-[#4A6080] bg-white/5 px-1.5 py-0.5 rounded uppercase">{d.category}</span>
                         </td>
                         <td className="px-4 py-3 text-right font-mono text-sm text-white">
-                          {d.price != null ? d.price.toLocaleString('id-ID', { maximumFractionDigits: 4 }) : '—'}
+                          {d.price != null ? Number(d.price).toLocaleString('id-ID', { maximumFractionDigits: 4 }) : '—'}
                         </td>
                         <td className="px-5 py-3 text-right">
                           {d.change_pct != null ? (

@@ -71,22 +71,22 @@ function PortfolioContent() {
                         <span className="text-[10px] font-mono text-[#4A6080] bg-white/5 px-1.5 py-0.5 rounded uppercase">{pos.category}</span>
                       </td>
                       <td className="px-4 py-3 font-mono text-sm text-white">
-                        {pos.quantity.toLocaleString('id-ID')}
+                        {Number(pos.quantity ?? 0).toLocaleString('id-ID')}
                       </td>
                       <td className="px-4 py-3 font-mono text-sm text-white">
-                        {pos.buy_price.toLocaleString('id-ID', { maximumFractionDigits: 4 })}
+                        {Number(pos.buy_price ?? 0).toLocaleString('id-ID', { maximumFractionDigits: 4 })}
                       </td>
                       <td className="px-4 py-3">
                         <span className="font-mono text-xs text-[#00E676]">
                           {pos.target_price != null
-                            ? pos.target_price.toLocaleString('id-ID', { maximumFractionDigits: 4 })
+                            ? Number(pos.target_price).toLocaleString('id-ID', { maximumFractionDigits: 4 })
                             : '—'}
                         </span>
                       </td>
                       <td className="px-4 py-3">
                         <span className="font-mono text-xs text-[#FF4757]">
                           {pos.stop_loss != null
-                            ? pos.stop_loss.toLocaleString('id-ID', { maximumFractionDigits: 4 })
+                            ? Number(pos.stop_loss).toLocaleString('id-ID', { maximumFractionDigits: 4 })
                             : '—'}
                         </span>
                       </td>

@@ -42,16 +42,16 @@ export function LiveTickerBar() {
         {doubled.map((item, idx) => (
           <div key={idx} className="flex items-center gap-2 px-4 border-r border-white/5 h-full">
             <span className="font-mono text-[11px] font-bold text-white/70">{item.symbol}</span>
-            <span className={`font-mono text-[11px] font-bold ${(item.change_pct ?? 0) >= 0 ? 'text-[#00E676]' : 'text-[#FF4757]'}`}>
-              {item.price?.toLocaleString('id-ID', { maximumFractionDigits: 2 })}
+            <span className={`font-mono text-[11px] font-bold ${Number(item.change_pct ?? 0) >= 0 ? 'text-[#00E676]' : 'text-[#FF4757]'}`}>
+              {Number(item.price ?? 0).toLocaleString('id-ID', { maximumFractionDigits: 2 })}
             </span>
             <span className={`flex items-center gap-0.5 text-[9px] font-mono font-bold px-1 py-0.5 rounded ${
-              (item.change_pct ?? 0) >= 0
+              Number(item.change_pct ?? 0) >= 0
                 ? 'text-[#00E676] bg-[#00E676]/10'
                 : 'text-[#FF4757] bg-[#FF4757]/10'
             }`}>
-              {(item.change_pct ?? 0) >= 0 ? <TrendingUp size={7} /> : <TrendingDown size={7} />}
-              {Math.abs(item.change_pct ?? 0).toFixed(2)}%
+              {Number(item.change_pct ?? 0) >= 0 ? <TrendingUp size={7} /> : <TrendingDown size={7} />}
+              {Math.abs(Number(item.change_pct ?? 0)).toFixed(2)}%
             </span>
           </div>
         ))}

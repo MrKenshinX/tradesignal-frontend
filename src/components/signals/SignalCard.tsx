@@ -12,7 +12,7 @@ export function SignalCard({ signal }: Props) {
   const isBuy = action === 'BUY';
   const isSell = action === 'SELL';
   const isStrong = signal.signal_type === 'strong_buy' || signal.signal_type === 'strong_sell';
-  const confidence = signal.confidence ?? 0;
+  const confidence = Number(signal.confidence ?? 0);
   const isIDN = signal.category === 'idn';
 
   const borderCls = isBuy
@@ -69,7 +69,7 @@ export function SignalCard({ signal }: Props) {
           <p className="text-[#4A6080] text-[9px] uppercase tracking-wider mb-0.5">Entry Price</p>
           <p className="font-mono font-black text-xl text-white">
             {signal.price_entry != null
-              ? signal.price_entry.toLocaleString('id-ID', { maximumFractionDigits: 4 })
+              ? Number(signal.price_entry).toLocaleString('id-ID', { maximumFractionDigits: 4 })
               : '—'}
           </p>
         </div>
@@ -101,7 +101,7 @@ export function SignalCard({ signal }: Props) {
           </div>
           <span className="font-mono text-xs font-bold text-white">
             {signal.price_stop_loss != null
-              ? signal.price_stop_loss.toLocaleString('id-ID', { maximumFractionDigits: 4 })
+              ? Number(signal.price_stop_loss).toLocaleString('id-ID', { maximumFractionDigits: 4 })
               : '—'}
           </span>
         </div>
@@ -112,7 +112,7 @@ export function SignalCard({ signal }: Props) {
           </div>
           <span className="font-mono text-xs font-bold text-white">
             {signal.price_target != null
-              ? signal.price_target.toLocaleString('id-ID', { maximumFractionDigits: 4 })
+              ? Number(signal.price_target).toLocaleString('id-ID', { maximumFractionDigits: 4 })
               : '—'}
           </span>
         </div>
@@ -121,8 +121,8 @@ export function SignalCard({ signal }: Props) {
       {/* Indicators */}
       <div className="grid grid-cols-3 gap-1.5 mb-3">
         {[
-          { label: 'RSI', value: signal.rsi?.toFixed(0), color: rsiColor },
-          { label: 'ADX', value: signal.adx?.toFixed(0), color: 'text-[#8BA8C2]' },
+          { label: 'RSI', value: signal.rsi != null ? Number(signal.rsi).toFixed(0) : undefined, color: rsiColor },
+          { label: 'ADX', value: signal.adx != null ? Number(signal.adx).toFixed(0) : undefined, color: 'text-[#8BA8C2]' },
           { label: 'Score', value: signal.score?.toString(), color: 'text-[#7B2FFF]' },
         ].map(({ label, value, color }) => (
           <div key={label} className="p-1.5 rounded-lg bg-white/3 border border-white/5 text-center">
