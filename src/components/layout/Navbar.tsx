@@ -6,28 +6,40 @@ import { Menu, X, Zap, LogOut, BarChart2, TrendingUp, ChevronDown } from 'lucide
 import { useAuthStore } from '@/store/auth';
 import { PLAN_DISPLAY, PLAN_COLOR } from '@/types';
 
-const NAV_LINKS = [
+const PUBLIC_LINKS = [
   { href: '/', label: 'Home' },
-  { href: '/dashboard', label: 'Dashboard' },
-  { href: '/signals', label: 'Sinyal' },
-  { href: '/screener', label: 'Screener' },
-  { href: '/portfolio', label: 'Portfolio' },
   { href: '/edukasi', label: 'Edukasi' },
   { href: '/blog', label: 'Blog' },
 ];
+
 
 export function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const pathname = usePathname();
   const { user, logout } = useAuthStore();
 
   useEffect(() => {
+    setMounted(true);
     const onScroll = () => setScrolled(window.scrollY > 20);
     window.addEventListener('scroll', onScroll);
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
+
+  // Show protected links only after mount + when logged in (avoids hydration mismatch)
+  const navLinks = mounted && user
+    ? [
+        { href: '/', label: 'Home' },
+        { href: '/dashboard', label: 'Dashboard' },
+        { href: '/signals', label: 'Sinyal' },
+        { href: '/screener', label: 'Screener' },
+        { href: '/portfolio', label: 'Portfolio' },
+        { href: '/edukasi', label: 'Edukasi' },
+        { href: '/blog', label: 'Blog' },
+      ]
+    : PUBLIC_LINKS;
 
   return (
     <>
@@ -65,7 +77,7 @@ export function Navbar() {
 
             {/* Desktop Nav — pill container */}
             <div className="hidden lg:flex items-center gap-1 px-2 py-1.5 rounded-2xl bg-white/4 border border-white/8 backdrop-blur-sm">
-              {NAV_LINKS.map((link) => {
+              {navLinks.map((link) => {
                 const isActive = pathname === link.href;
                 return (
                   <Link key={link.href} href={link.href}
@@ -156,7 +168,7 @@ export function Navbar() {
           <div className="lg:hidden absolute top-full left-0 right-0 border-t border-white/5 z-40"
             style={{ background: 'rgba(6,11,24,0.98)', backdropFilter: 'blur(24px)' }}>
             <div className="max-w-7xl mx-auto px-4 py-4 space-y-1">
-              {NAV_LINKS.map((link) => (
+              {navLinks.map((link) => (
                 <Link key={link.href} href={link.href} onClick={() => setMobileOpen(false)}
                   className={`flex items-center justify-between px-4 py-3 rounded-xl text-sm font-medium transition-all ${
                     pathname === link.href
