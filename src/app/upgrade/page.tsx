@@ -9,10 +9,8 @@ import {
   Crown, Check, Copy, Upload, Loader2, Clock, CheckCircle2, XCircle, FileImage,
 } from 'lucide-react';
 
-// ⚠️ GANTI dengan rekening asli kamu
 const BANK_ACCOUNTS = [
-  { bank: 'BCA', number: '1234567890', name: 'Nama Pemilik Rekening' },
-  { bank: 'DANA / OVO / GoPay', number: '0812-xxxx-xxxx', name: 'Nama Pemilik' },
+  { bank: 'BRI', number: '006901049106504', name: 'Unggul Panji Dewanto' },
 ];
 
 const PLANS = [
@@ -41,7 +39,7 @@ function UpgradeContent() {
   const [order, setOrder] = useState<PaymentOrder | null>(null);
   const [creating, setCreating] = useState(false);
   const [file, setFile] = useState<File | null>(null);
-  const [metode, setMetode] = useState('Transfer Bank');
+  const metode = 'Transfer BRI';
   const [catatan, setCatatan] = useState('');
   const [uploading, setUploading] = useState(false);
   const [msg, setMsg] = useState<{ type: 'ok' | 'err'; text: string } | null>(null);
@@ -221,7 +219,7 @@ function UpgradeContent() {
 
             {/* Bank accounts */}
             <div className="rounded-2xl glass border border-white/8 p-5 mb-6">
-              <h3 className="text-white font-semibold text-sm mb-4">1 — Transfer ke salah satu rekening:</h3>
+              <h3 className="text-white font-semibold text-sm mb-4">1 — Transfer ke rekening berikut:</h3>
               <div className="space-y-3">
                 {BANK_ACCOUNTS.map((b) => (
                   <div key={b.bank} className="flex items-center justify-between rounded-xl bg-white/3 border border-white/5 px-4 py-3">
@@ -254,14 +252,9 @@ function UpgradeContent() {
               <h3 className="text-white font-semibold text-sm">2 — Upload bukti transfer:</h3>
               <div>
                 <label className="block text-xs font-mono text-[#8BA8C2] uppercase tracking-wider mb-2">Metode Bayar</label>
-                <select value={metode} onChange={(e) => setMetode(e.target.value)}
-                  className="w-full px-4 py-2.5 rounded-xl bg-[#0A1128] border border-white/10 text-white text-sm focus:outline-none">
-                  <option>Transfer Bank</option>
-                  <option>DANA</option>
-                  <option>OVO</option>
-                  <option>GoPay</option>
-                  <option>Lainnya</option>
-                </select>
+                <div className="w-full px-4 py-2.5 rounded-xl bg-[#0A1128] border border-white/10 text-white text-sm">
+                  Transfer BRI
+                </div>
               </div>
               <div>
                 <label className="block text-xs font-mono text-[#8BA8C2] uppercase tracking-wider mb-2">Screenshot Bukti (JPG/PNG, max 5MB)</label>

@@ -196,7 +196,7 @@ export function PricingSection() {
         </div>
 
         <p className="text-center text-[#4A6080] text-xs mt-8">
-          Semua harga dalam Rupiah. Pembayaran via transfer bank / e-wallet. Tidak ada biaya tersembunyi.
+          Semua harga dalam Rupiah. Pembayaran via transfer bank BRI. Tidak ada biaya tersembunyi.
         </p>
       </div>
     </section>
