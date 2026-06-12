@@ -4,14 +4,14 @@ import { useRouter } from 'next/navigation';
 import {
   adminAuth, adminAPI,
   type AdminOverview, type ManagedUser, type AdminSubscription,
-  type AdminRevenue, type AdminTransaction, type BroadcastLog,
+  type AdminRevenue, type AdminTransaction, type BroadcastLog, type PendingPayment,
 } from '@/lib/admin-api';
 import {
   Shield, Users, CreditCard, TrendingUp, Radio, LogOut,
-  Search, Loader2, ChevronLeft, ChevronRight, RefreshCw, KeyRound,
+  Search, Loader2, ChevronLeft, ChevronRight, RefreshCw, KeyRound, Wallet, ExternalLink,
 } from 'lucide-react';
 
-type Tab = 'overview' | 'users' | 'subscriptions' | 'revenue' | 'broadcast' | 'settings';
+type Tab = 'overview' | 'users' | 'payments' | 'subscriptions' | 'revenue' | 'broadcast' | 'settings';
 
 const fmtIDR = (n: number | string | null | undefined) =>
   'Rp ' + Number(n ?? 0).toLocaleString('id-ID');
@@ -301,6 +301,116 @@ function UsersTab() {
           </div>
         </div>
       </div>
+    </div>
+  );
+}
+
+// ============ PAYMENTS TAB (konfirmasi bukti transfer) ============
+function PaymentsTab() {
+  const [items, setItems] = useState<PendingPayment[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [busy, setBusy] = useState<string | null>(null);
+  const [msg, setMsg] = useState('');
+  const [note, setNote] = useState<Record<string, string>>({});
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    try { setItems(await adminAPI.pendingPayments()); } catch { /* */ }
+    setLoading(false);
+  }, []);
+  useEffect(() => { load(); }, [load]);
+
+  const buktiHref = (url?: string) => {
+    if (!url) return '#';
+    const filename = url.split('/').pop();
+    return `/api/payment/bukti/${filename}`;
+  };
+
+  const act = async (orderId: string, action: 'confirm' | 'reject') => {
+    setBusy(orderId);
+    try {
+      if (action === 'confirm') await adminAPI.confirmPayment(orderId, note[orderId]);
+      else await adminAPI.rejectPayment(orderId, note[orderId]);
+      setMsg(action === 'confirm' ? `Order ${orderId} dikonfirmasi — plan user aktif.` : `Order ${orderId} ditolak.`);
+      await load();
+    } catch { setMsg('Gagal memproses. Coba lagi.'); }
+    setBusy(null);
+    setTimeout(() => setMsg(''), 4000);
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <p className="text-[#8BA8C2] text-sm">{items.length} pembayaran menunggu konfirmasi</p>
+        <button onClick={load} className="px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-[#8BA8C2] hover:text-white transition-colors">
+          <RefreshCw size={14} />
+        </button>
+      </div>
+      {msg && <div className="px-4 py-2.5 rounded-xl bg-[#00D4FF]/10 border border-[#00D4FF]/30 text-[#00D4FF] text-sm">{msg}</div>}
+
+      {loading ? (
+        <div className="flex justify-center py-16"><Loader2 className="animate-spin text-[#00D4FF]" size={26} /></div>
+      ) : items.length === 0 ? (
+        <div className="rounded-2xl glass border border-white/8 px-5 py-14 text-center">
+          <Wallet size={28} className="text-[#4A6080] mx-auto mb-3" />
+          <p className="text-[#8BA8C2] text-sm">Tidak ada pembayaran pending. 🎉</p>
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {items.map((p) => (
+            <div key={p.order_id} className="rounded-2xl glass border border-white/8 p-5">
+              <div className="flex flex-wrap items-start justify-between gap-4">
+                <div className="min-w-[200px]">
+                  <p className="text-white font-semibold text-sm">{p.user_name}</p>
+                  <p className="text-[#4A6080] text-xs">{p.user_email}</p>
+                  <p className="text-[#8BA8C2] text-xs font-mono mt-1.5">{p.order_id}</p>
+                </div>
+                <div>
+                  <p className="text-[#4A6080] text-[10px] font-mono uppercase">Plan</p>
+                  <Badge value={p.plan} map={PLAN_BADGE} />
+                </div>
+                <div>
+                  <p className="text-[#4A6080] text-[10px] font-mono uppercase">Nominal</p>
+                  <p className="text-[#00E676] font-mono font-bold">{fmtIDR(p.amount)}</p>
+                </div>
+                <div>
+                  <p className="text-[#4A6080] text-[10px] font-mono uppercase">Metode</p>
+                  <p className="text-white text-xs">{p.metode_bayar ?? '—'}</p>
+                </div>
+                <div>
+                  <p className="text-[#4A6080] text-[10px] font-mono uppercase">Upload</p>
+                  <p className="text-[#8BA8C2] text-xs font-mono">{fmtDate(p.uploaded_at)}</p>
+                </div>
+                {p.bukti_url && (
+                  <a href={buktiHref(p.bukti_url)} target="_blank" rel="noopener noreferrer"
+                    className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-[#00D4FF]/10 text-[#00D4FF] text-xs font-semibold hover:bg-[#00D4FF]/20 transition-colors">
+                    <ExternalLink size={13} /> Lihat Bukti
+                  </a>
+                )}
+              </div>
+              {p.catatan_user && (
+                <p className="text-[#8BA8C2] text-xs mt-3 italic">Catatan user: &ldquo;{p.catatan_user}&rdquo;</p>
+              )}
+              <div className="flex flex-wrap items-center gap-3 mt-4 pt-4 border-t border-white/5">
+                <input
+                  value={note[p.order_id] ?? ''}
+                  onChange={(e) => setNote(n => ({ ...n, [p.order_id]: e.target.value }))}
+                  placeholder="Catatan admin (opsional)..."
+                  className="flex-1 min-w-[180px] px-3.5 py-2 rounded-lg bg-white/5 border border-white/10 text-white text-xs focus:border-[#00D4FF] focus:outline-none"
+                />
+                <button onClick={() => act(p.order_id, 'confirm')} disabled={busy === p.order_id}
+                  className="px-4 py-2 rounded-lg bg-[#00E676]/15 text-[#00E676] text-xs font-bold hover:bg-[#00E676]/25 disabled:opacity-50 transition-colors">
+                  {busy === p.order_id ? '...' : '✓ Konfirmasi'}
+                </button>
+                <button onClick={() => act(p.order_id, 'reject')} disabled={busy === p.order_id}
+                  className="px-4 py-2 rounded-lg bg-[#FF4757]/15 text-[#FF4757] text-xs font-bold hover:bg-[#FF4757]/25 disabled:opacity-50 transition-colors">
+                  ✕ Tolak
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -636,6 +746,7 @@ function SettingsTab() {
 const TABS: { id: Tab; label: string; icon: React.ReactNode }[] = [
   { id: 'overview', label: 'Overview', icon: <TrendingUp size={15} /> },
   { id: 'users', label: 'Users', icon: <Users size={15} /> },
+  { id: 'payments', label: 'Pembayaran', icon: <Wallet size={15} /> },
   { id: 'subscriptions', label: 'Langganan', icon: <CreditCard size={15} /> },
   { id: 'revenue', label: 'Revenue', icon: <TrendingUp size={15} /> },
   { id: 'broadcast', label: 'Broadcast', icon: <Radio size={15} /> },
@@ -714,6 +825,7 @@ export default function AdminPage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {tab === 'overview' && <OverviewTab />}
         {tab === 'users' && <UsersTab />}
+        {tab === 'payments' && <PaymentsTab />}
         {tab === 'subscriptions' && <SubscriptionsTab />}
         {tab === 'revenue' && <RevenueTab />}
         {tab === 'broadcast' && <BroadcastTab />}

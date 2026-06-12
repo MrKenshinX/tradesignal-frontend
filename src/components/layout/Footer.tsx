@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Zap, ExternalLink, Send, MessageCircle, PlayCircle } from 'lucide-react';
+import { Zap, ExternalLink } from 'lucide-react';
 
 const FOOTER_LINKS = [
   {
@@ -56,19 +56,6 @@ export function Footer() {
             <p className="text-[#8BA8C2] text-sm leading-relaxed mb-5 max-w-xs">
               Platform sinyal trading otomatis berbasis AI. Data real-time dari Yahoo Finance, Finnhub & Binance WebSocket.
             </p>
-            <div className="flex gap-2">
-              {[
-                { icon: Send, href: '#', label: 'Telegram' },
-                { icon: MessageCircle, href: '#', label: 'WhatsApp' },
-                { icon: PlayCircle, href: '#', label: 'YouTube' },
-              ].map(({ icon: Icon, href, label }) => (
-                <a key={label} href={href}
-                  className="w-8 h-8 rounded-lg flex items-center justify-center text-[#4A6080] hover:text-[#00D4FF] transition-colors"
-                  style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}>
-                  <Icon size={13} />
-                </a>
-              ))}
-            </div>
           </div>
 
           {/* Links */}
@@ -105,7 +92,7 @@ export function Footer() {
 
         {/* Bottom */}
         <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-6 border-t border-white/5">
-          <p className="text-[#4A6080] text-xs">© 2025 TradeSignal Pro. Data dari Yahoo Finance, Finnhub, Binance.</p>
+          <p className="text-[#4A6080] text-xs">© {new Date().getFullYear()} TradeSignal Pro. Data dari Yahoo Finance, Finnhub, Binance.</p>
           <p className="text-[#4A6080] text-xs">⚠️ Bukan saran investasi. Trading mengandung risiko.</p>
         </div>
       </div>

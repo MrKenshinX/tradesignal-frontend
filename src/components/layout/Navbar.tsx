@@ -2,8 +2,9 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Menu, X, Zap, LogOut, BarChart2, TrendingUp, ChevronDown } from 'lucide-react';
+import { Menu, X, Zap, LogOut, BarChart2, TrendingUp, ChevronDown, Crown } from 'lucide-react';
 import { useAuthStore } from '@/store/auth';
+import NotificationBell from './NotificationBell';
 import { PLAN_DISPLAY, PLAN_COLOR } from '@/types';
 
 const PUBLIC_LINKS = [
@@ -103,6 +104,8 @@ export function Navbar() {
                 LIVE
               </div>
 
+              {mounted && user && <NotificationBell />}
+
               {user ? (
                 <div className="relative">
                   <button onClick={() => setUserMenuOpen(!userMenuOpen)}
@@ -127,6 +130,10 @@ export function Navbar() {
                       <Link href="/portfolio" onClick={() => setUserMenuOpen(false)}
                         className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-[#8BA8C2] hover:text-white hover:bg-white/5 transition-colors">
                         <TrendingUp size={13} /> Portfolio
+                      </Link>
+                      <Link href="/upgrade" onClick={() => setUserMenuOpen(false)}
+                        className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-[#FFD700] hover:bg-[#FFD700]/8 transition-colors">
+                        <Crown size={13} /> Upgrade Plan
                       </Link>
                       <div className="border-t border-white/5" />
                       <button onClick={() => { logout(); setUserMenuOpen(false); }}

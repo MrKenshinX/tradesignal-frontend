@@ -24,7 +24,7 @@ export function CTASection() {
         </h2>
 
         <p className="text-[#8BA8C2] text-lg mb-10 max-w-2xl mx-auto">
-          Bergabunglah dengan 3.200+ trader Indonesia yang sudah menggunakan sinyal AI kami.
+          Sinyal AI dengan 6 indikator teknikal, update setiap 5 menit.
           Gratis untuk memulai, upgrade kapan kamu siap.
         </p>
 

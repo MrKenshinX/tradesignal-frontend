@@ -111,4 +111,70 @@ export const authAPI = {
     api.post('/api/auth/reset-password', { token, password }),
 };
 
+// =============================================
+// Payment API — manual transfer flow
+// =============================================
+export interface PaymentOrder {
+  order_id: string; plan: string; amount: number; expired_at: string;
+}
+export interface PaymentHistory {
+  order_id: string; plan: string; amount: number; status: string;
+  metode_bayar?: string; bukti_url?: string; catatan_admin?: string;
+  paid_at?: string; created_at: string; expired_at?: string;
+}
+export const paymentAPI = {
+  createOrder: async (plan: string): Promise<PaymentOrder> => {
+    const res = await api.post<{ success: boolean; order: PaymentOrder }>('/api/payment/create-order', { plan });
+    return res.data.order;
+  },
+  uploadBukti: (orderId: string, file: File, metode: string, catatan?: string) => {
+    const fd = new FormData();
+    fd.append('bukti', file);
+    fd.append('order_id', orderId);
+    fd.append('metode_bayar', metode);
+    if (catatan) fd.append('catatan', catatan);
+    return api.post<{ success: boolean; message: string }>('/api/payment/upload-bukti', fd, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+  },
+  history: async (): Promise<PaymentHistory[]> => {
+    const res = await api.get<{ success: boolean; data: PaymentHistory[] }>('/api/payment/history');
+    return res.data.data ?? [];
+  },
+};
+
+// =============================================
+// Watchlist API
+// =============================================
+export interface WatchlistItem {
+  id: number; symbol: string; category: string;
+  alert_price?: number | null; alert_type?: string; created_at: string;
+}
+export const watchlistAPI = {
+  list: async (): Promise<WatchlistItem[]> => {
+    const res = await api.get<{ success: boolean; data: WatchlistItem[] }>('/api/portfolio/watchlist');
+    return res.data.data ?? [];
+  },
+  add: (symbol: string, category: string) =>
+    api.post('/api/portfolio/watchlist', { symbol, category }),
+  remove: (symbol: string) =>
+    api.delete(`/api/portfolio/watchlist/${encodeURIComponent(symbol)}`),
+};
+
+// =============================================
+// Notifications API
+// =============================================
+export interface Notification {
+  id: number; title: string; body: string; type: string;
+  is_read: boolean; created_at: string;
+}
+export const notificationsAPI = {
+  list: async (): Promise<Notification[]> => {
+    const res = await api.get<{ success: boolean; data: Notification[] }>('/api/auth/notifications');
+    return res.data.data ?? [];
+  },
+  markRead: (id: number) => api.put(`/api/auth/notifications/${id}/read`),
+  readAll: () => api.put('/api/auth/notifications/read-all'),
+};
+
 export default api;

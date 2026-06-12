@@ -3,10 +3,10 @@ import { AnimatedCounter } from './AnimatedCounter';
 import { Zap, TrendingUp, Users, Activity } from 'lucide-react';
 
 const STATS = [
-  { label: 'Sinyal Dihasilkan', value: 50000, suffix: '+', icon: Zap, color: '#00D4FF', glow: 'rgba(0,212,255,0.2)' },
-  { label: 'Instrumen Dipantau', value: 150, suffix: '+', icon: TrendingUp, color: '#7B2FFF', glow: 'rgba(123,47,255,0.2)' },
-  { label: 'Trader Aktif', value: 3200, suffix: '+', icon: Users, color: '#00E676', glow: 'rgba(0,230,118,0.2)' },
-  { label: 'Uptime Sistem', value: 99.9, suffix: '%', decimals: 1, icon: Activity, color: '#FFD700', glow: 'rgba(255,215,0,0.2)' },
+  { label: 'Instrumen Dipantau', value: 150, suffix: '+', icon: TrendingUp, color: '#00D4FF', glow: 'rgba(0,212,255,0.2)' },
+  { label: 'Indikator Teknikal', value: 6, suffix: '', icon: Zap, color: '#7B2FFF', glow: 'rgba(123,47,255,0.2)' },
+  { label: 'Menit Interval Update', value: 5, suffix: '', icon: Activity, color: '#00E676', glow: 'rgba(0,230,118,0.2)' },
+  { label: 'Jam Engine Aktif', value: 24, suffix: '/7', icon: Users, color: '#FFD700', glow: 'rgba(255,215,0,0.2)' },
 ];
 
 export function StatsSection() {
@@ -36,7 +36,7 @@ export function StatsSection() {
                 {/* Value */}
                 <div className="relative font-display font-black text-3xl sm:text-4xl mb-1"
                   style={{ color: stat.color }}>
-                  <AnimatedCounter end={stat.value} suffix={stat.suffix} decimals={stat.decimals || 0} />
+                  <AnimatedCounter end={stat.value} suffix={stat.suffix} decimals={0} />
                 </div>
 
                 <p className="relative text-[#8BA8C2] text-sm">{stat.label}</p>

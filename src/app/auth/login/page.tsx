@@ -117,6 +117,11 @@ export default function LoginPage() {
                   {showPass ? <EyeOff size={14} /> : <Eye size={14} />}
                 </button>
               </div>
+              <div className="flex justify-end mt-2">
+                <Link href="/auth/forgot-password" className="text-[#00D4FF] text-xs hover:underline">
+                  Lupa password?
+                </Link>
+              </div>
             </div>
 
             <button type="submit" disabled={loading}

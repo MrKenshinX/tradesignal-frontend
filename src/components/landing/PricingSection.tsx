@@ -2,6 +2,15 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { Check, Zap, Star, Crown } from 'lucide-react';
+import { useAuthStore } from '@/store/auth';
+
+// Map landing plan IDs → upgrade page plan IDs
+const PLAN_MAP: Record<string, string> = {
+  PREMIUM_IDN: 'idn',
+  PREMIUM_ASING: 'asing',
+  PREMIUM_CRYPTO: 'crypto',
+  VIP: 'vip',
+};
 
 const PLANS = [
   {
@@ -108,6 +117,7 @@ const PLANS = [
 ];
 
 export function PricingSection() {
+  const { user } = useAuthStore();
   return (
     <section className="relative py-24 bg-[#060B18]" id="pricing">
       <div className="absolute inset-0 bg-grid opacity-15 pointer-events-none" />
@@ -169,7 +179,13 @@ export function PricingSection() {
                 </ul>
 
                 <Link
-                  href={plan.id === 'FREE' ? '/auth/register' : '/auth/register?plan=' + plan.id}
+                  href={
+                    plan.id === 'FREE'
+                      ? '/auth/register'
+                      : user
+                        ? '/upgrade?plan=' + (PLAN_MAP[plan.id] ?? '')
+                        : '/auth/register?plan=' + plan.id
+                  }
                   className={`block text-center py-2.5 px-4 rounded-xl text-sm transition-all duration-200 ${plan.ctaClass}`}
                 >
                   {plan.cta}

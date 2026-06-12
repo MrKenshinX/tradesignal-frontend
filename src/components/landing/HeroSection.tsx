@@ -4,12 +4,17 @@ import Link from 'next/link';
 import { Zap, ArrowRight, TrendingUp, Shield, Clock, Activity } from 'lucide-react';
 import { StarfieldCanvas } from './StarfieldCanvas';
 
-const SIGNAL_PREVIEWS = [
-  { symbol: 'BBCA', action: 'BUY', confidence: 87, market: 'IDN', price: '9.850', change: '+2.3%', rsi: 42 },
-  { symbol: 'BTC/USDT', action: 'BUY', confidence: 92, market: 'CRYPTO', price: '97,240', change: '+4.1%', rsi: 38 },
-  { symbol: 'AAPL', action: 'SELL', confidence: 74, market: 'ASING', price: '189.50', change: '-1.2%', rsi: 74 },
-  { symbol: 'TLKM', action: 'BUY', confidence: 81, market: 'IDN', price: '3.920', change: '+1.8%', rsi: 45 },
-  { symbol: 'ETH/USDT', action: 'BUY', confidence: 89, market: 'CRYPTO', price: '3.412', change: '+5.7%', rsi: 35 },
+interface PreviewItem {
+  symbol: string; market: string; price: string; change: number;
+}
+
+// Fallback jika API belum termuat
+const FALLBACK_PREVIEWS: PreviewItem[] = [
+  { symbol: 'BBCA', market: 'IDN', price: '—', change: 0 },
+  { symbol: 'BTCUSDT', market: 'CRYPTO', price: '—', change: 0 },
+  { symbol: 'AAPL', market: 'ASING', price: '—', change: 0 },
+  { symbol: 'TLKM', market: 'IDN', price: '—', change: 0 },
+  { symbol: 'ETHUSDT', market: 'CRYPTO', price: '—', change: 0 },
 ];
 
 const TYPING_TEXTS = [
@@ -25,11 +30,46 @@ export function HeroSection() {
   const [typingIdx, setTypingIdx] = useState(0);
   const [typingText, setTypingText] = useState('');
   const [isDeleting, setIsDeleting] = useState(false);
+  const [previews, setPreviews] = useState<PreviewItem[]>(FALLBACK_PREVIEWS);
+  const [isReal, setIsReal] = useState(false);
+
+  // Fetch real market data (public endpoints) — top movers
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const [idnRes, cryptoRes, asingRes] = await Promise.all([
+          fetch('/api/market/idn').then(r => r.json()).catch(() => null),
+          fetch('/api/market/crypto').then(r => r.json()).catch(() => null),
+          fetch('/api/market/asing').then(r => r.json()).catch(() => null),
+        ]);
+        type Raw = { symbol: string; price: string | number; change_pct: string | number };
+        const tag = (rows: Raw[] | undefined, market: string): PreviewItem[] =>
+          (rows ?? []).map((r) => ({
+            symbol: r.symbol,
+            market,
+            price: Number(r.price ?? 0).toLocaleString('id-ID', { maximumFractionDigits: 2 }),
+            change: Number(r.change_pct ?? 0),
+          }));
+        const merged = [
+          ...tag(idnRes?.data, 'IDN'),
+          ...tag(asingRes?.data, 'ASING'),
+          ...tag(cryptoRes?.data, 'CRYPTO'),
+        ].filter(p => p.price !== '0');
+        if (merged.length >= 5 && !cancelled) {
+          merged.sort((a, b) => Math.abs(b.change) - Math.abs(a.change));
+          setPreviews(merged.slice(0, 5));
+          setIsReal(true);
+        }
+      } catch { /* keep fallback */ }
+    })();
+    return () => { cancelled = true; };
+  }, []);
 
   useEffect(() => {
     setMounted(true);
     const signalInterval = setInterval(() => {
-      setActiveSignal((prev) => (prev + 1) % SIGNAL_PREVIEWS.length);
+      setActiveSignal((prev) => (prev + 1) % 5);
     }, 2500);
     return () => clearInterval(signalInterval);
   }, []);
@@ -53,7 +93,6 @@ export function HeroSection() {
     return () => clearTimeout(timeout);
   }, [typingText, isDeleting, typingIdx]);
 
-  const signal = SIGNAL_PREVIEWS[activeSignal];
 
   return (
     <section className="relative min-h-screen flex flex-col overflow-hidden bg-[#060B18]">
@@ -130,7 +169,7 @@ export function HeroSection() {
 
         {/* Live Signal Preview */}
         <div className={`w-full max-w-5xl transition-all duration-700 delay-500 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-12'}`}>
-          <p className="text-[#4A6080] text-[11px] font-mono uppercase tracking-[0.2em] mb-5">— Live Signal Feed Preview —</p>
+          <p className="text-[#4A6080] text-[11px] font-mono uppercase tracking-[0.2em] mb-5">— Live Market Movers —</p>
 
           <div className="relative rounded-2xl overflow-hidden border border-[#00D4FF]/15 shadow-[0_0_60px_rgba(0,212,255,0.08)]"
             style={{ background: 'rgba(6,11,24,0.8)', backdropFilter: 'blur(20px)' }}>
@@ -155,10 +194,10 @@ export function HeroSection() {
 
             {/* Signal cards */}
             <div className="p-5 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
-              {SIGNAL_PREVIEWS.map((s, i) => (
-                <div key={i} className={`relative p-4 rounded-xl border transition-all duration-500 ${
+              {previews.map((s, i) => (
+                <div key={`${s.symbol}-${i}`} className={`relative p-4 rounded-xl border transition-all duration-500 ${
                   i === activeSignal
-                    ? s.action === 'BUY'
+                    ? s.change >= 0
                       ? 'bg-[#00E676]/8 border-[#00E676]/50 shadow-[0_0_20px_rgba(0,230,118,0.15)] scale-[1.03]'
                       : 'bg-[#FF4757]/8 border-[#FF4757]/50 shadow-[0_0_20px_rgba(255,71,87,0.15)] scale-[1.03]'
                     : 'bg-white/2 border-white/6 hover:border-[#00D4FF]/15'
@@ -168,28 +207,26 @@ export function HeroSection() {
                       <span className="font-mono font-bold text-sm text-white">{s.symbol}</span>
                       <span className="ml-1.5 text-[9px] text-[#4A6080] font-mono bg-white/5 px-1 py-0.5 rounded">{s.market}</span>
                     </div>
-                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md ${s.action === 'BUY' ? 'signal-buy' : 'signal-sell'}`}>
-                      {s.action}
+                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md ${s.change >= 0 ? 'signal-buy' : 'signal-sell'}`}>
+                      {s.change >= 0 ? 'NAIK' : 'TURUN'}
                     </span>
                   </div>
                   <div className="flex items-end justify-between mb-2">
                     <span className="font-mono font-bold text-sm text-white">{s.price}</span>
-                    <span className={`font-mono text-[10px] font-bold ${s.change.startsWith('+') ? 'text-[#00E676]' : 'text-[#FF4757]'}`}>{s.change}</span>
+                    <span className={`font-mono text-[10px] font-bold ${s.change >= 0 ? 'text-[#00E676]' : 'text-[#FF4757]'}`}>
+                      {s.change >= 0 ? '+' : ''}{s.change.toFixed(2)}%
+                    </span>
                   </div>
-                  <div className="flex items-center justify-between mb-1.5">
-                    <span className="text-[9px] text-[#4A6080]">RSI {s.rsi}</span>
-                    <span className={`text-[10px] font-mono font-bold ${s.confidence >= 80 ? 'text-[#00E676]' : 'text-[#FFD700]'}`}>{s.confidence}%</span>
-                  </div>
-                  <div className="h-0.5 bg-white/5 rounded-full overflow-hidden">
-                    <div className={`h-full rounded-full transition-all duration-700 ${s.action === 'BUY' ? 'bg-[#00E676]' : 'bg-[#FF4757]'}`}
-                      style={{ width: `${s.confidence}%` }} />
+                  <div className="h-0.5 bg-white/5 rounded-full overflow-hidden mt-3">
+                    <div className={`h-full rounded-full transition-all duration-700 ${s.change >= 0 ? 'bg-[#00E676]' : 'bg-[#FF4757]'}`}
+                      style={{ width: `${Math.min(Math.abs(s.change) * 10, 100)}%` }} />
                   </div>
                 </div>
               ))}
             </div>
 
             <div className="px-5 pb-4 flex items-center justify-between">
-              <p className="text-[#4A6080] text-[10px] font-mono">Preview ilustrasi — data real setelah login</p>
+              <p className="text-[#4A6080] text-[10px] font-mono">{isReal ? "Top movers hari ini — data real dari market" : "Memuat data market..."}</p>
               <Link href="/auth/register" className="text-[#00D4FF] text-xs font-semibold hover:underline">Akses Sinyal Real →</Link>
             </div>
           </div>

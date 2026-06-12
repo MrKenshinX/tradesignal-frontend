@@ -6,7 +6,7 @@ import { StatsSection } from '@/components/landing/StatsSection';
 import { FeaturesSection } from '@/components/landing/FeaturesSection';
 import { LiveSignalsPreview } from '@/components/landing/LiveSignalsPreview';
 import { PricingSection } from '@/components/landing/PricingSection';
-import { TestimonialsSection } from '@/components/landing/TestimonialsSection';
+import { HowItWorksSection } from '@/components/landing/HowItWorksSection';
 import { CTASection } from '@/components/landing/CTASection';
 import { SWRProvider } from '@/components/providers/SWRProvider';
 
@@ -19,7 +19,7 @@ export default function HomePage() {
       <StatsSection />
       <FeaturesSection />
       <LiveSignalsPreview />
-      <TestimonialsSection />
+      <HowItWorksSection />
       <PricingSection />
       <CTASection />
       <Footer />

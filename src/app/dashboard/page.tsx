@@ -6,6 +6,7 @@ import { SWRProvider } from '@/components/providers/SWRProvider';
 import { AuthGuard } from '@/components/auth/AuthGuard';
 import { SignalCard } from '@/components/signals/SignalCard';
 import { MarketOverview } from '@/components/dashboard/MarketOverview';
+import WatchlistWidget from '@/components/dashboard/WatchlistWidget';
 import { useSignals } from '@/hooks/useMarketData';
 import { Zap, TrendingUp, BarChart2, RefreshCw } from 'lucide-react';
 import { signalLabel } from '@/types';
@@ -72,6 +73,10 @@ function DashboardContent() {
             </div>
 
             <MarketOverview />
+
+            <div className="mt-6">
+              <WatchlistWidget />
+            </div>
 
             {/* Signals */}
             <div className="mt-6">

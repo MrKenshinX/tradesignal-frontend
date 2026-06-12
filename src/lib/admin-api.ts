@@ -130,4 +130,19 @@ export const adminAPI = {
   },
   changePassword: (body: { current_password: string; new_password: string }) =>
     adminApi.post('/api/admin/settings/change-password', body),
+  // Payment moderation
+  pendingPayments: async (): Promise<PendingPayment[]> => {
+    const res = await adminApi.get<{ success: boolean; count: number; data: PendingPayment[] }>('/api/payment/admin/pending');
+    return res.data.data ?? [];
+  },
+  confirmPayment: (orderId: string, catatan?: string) =>
+    adminApi.post(`/api/payment/admin/confirm/${orderId}`, { catatan_admin: catatan }),
+  rejectPayment: (orderId: string, catatan?: string) =>
+    adminApi.post(`/api/payment/admin/reject/${orderId}`, { catatan_admin: catatan }),
 };
+
+export interface PendingPayment {
+  id: number; order_id: string; user_id: number; user_name: string; user_email: string;
+  plan: string; amount: number; status: string; metode_bayar?: string;
+  bukti_url?: string; catatan_user?: string; uploaded_at?: string; created_at: string;
+}

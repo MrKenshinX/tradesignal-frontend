@@ -5,7 +5,8 @@ import { Footer } from '@/components/layout/Footer';
 import { SWRProvider } from '@/components/providers/SWRProvider';
 import { AuthGuard } from '@/components/auth/AuthGuard';
 import { useMarketIDN, useMarketCrypto, useMarketAsing } from '@/hooks/useMarketData';
-import { Search, SlidersHorizontal, TrendingUp, TrendingDown } from 'lucide-react';
+import { Search, SlidersHorizontal, TrendingUp, TrendingDown, Star } from 'lucide-react';
+import { useWatchlist } from '@/hooks/useWatchlist';
 import type { MarketData } from '@/types';
 
 type Row = MarketData & { category: 'idn' | 'asing' | 'crypto' };
@@ -14,6 +15,7 @@ function ScreenerContent() {
   const { data: idn, isLoading: idnL } = useMarketIDN();
   const { data: crypto, isLoading: cryptoL } = useMarketCrypto();
   const { data: asing, isLoading: asingL } = useMarketAsing();
+  const { symbols: watchSymbols, toggle: toggleWatch } = useWatchlist();
 
   const [cat, setCat] = useState<'all' | 'idn' | 'asing' | 'crypto'>('all');
   const [search, setSearch] = useState('');
@@ -115,7 +117,15 @@ function ScreenerContent() {
                   : allData.map((d, i) => (
                       <tr key={i} className="border-b border-white/3 hover:bg-white/3 transition-colors">
                         <td className="px-5 py-3">
-                          <span className="font-mono font-bold text-sm text-white">{d.symbol}</span>
+                          <span className="flex items-center gap-2">
+                            <button onClick={() => toggleWatch(d.symbol, d.category)} aria-label="Toggle watchlist"
+                              className="shrink-0">
+                              <Star size={13} className={watchSymbols.has(d.symbol)
+                                ? 'text-[#FFD700] fill-[#FFD700]'
+                                : 'text-[#4A6080] hover:text-[#FFD700] transition-colors'} />
+                            </button>
+                            <span className="font-mono font-bold text-sm text-white">{d.symbol}</span>
+                          </span>
                         </td>
                         <td className="px-4 py-3 text-center">
                           <span className="text-[10px] font-mono text-[#4A6080] bg-white/5 px-1.5 py-0.5 rounded uppercase">{d.category}</span>
