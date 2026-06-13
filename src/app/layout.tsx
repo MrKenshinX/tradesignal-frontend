@@ -16,6 +16,20 @@ export const metadata: Metadata = {
     siteName: 'TradeSignal Pro',
     locale: 'id_ID',
     type: 'website',
+    images: [{ url: 'https://tradesignalpro.web.id/og-image.png', width: 1200, height: 630, alt: 'TradeSignal Pro' }],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'TradeSignal Pro — Sinyal Trading Real-Time',
+    description: 'Sinyal trading otomatis berbasis AI. Saham IDN, Asing & Crypto.',
+    images: ['https://tradesignalpro.web.id/og-image.png'],
+  },
+  icons: {
+    icon: [
+      { url: '/favicon.ico', sizes: 'any' },
+      { url: '/favicon.svg', type: 'image/svg+xml' },
+    ],
+    apple: '/apple-touch-icon.png',
   },
   manifest: '/manifest.json',
 };
