@@ -20,14 +20,21 @@ export function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [hash, setHash] = useState('');
   const pathname = usePathname();
   const { user, logout } = useAuthStore();
 
   useEffect(() => {
     setMounted(true);
     const onScroll = () => setScrolled(window.scrollY > 20);
+    const onHash = () => setHash(window.location.hash);
+    onHash();
     window.addEventListener('scroll', onScroll);
-    return () => window.removeEventListener('scroll', onScroll);
+    window.addEventListener('hashchange', onHash);
+    return () => {
+      window.removeEventListener('scroll', onScroll);
+      window.removeEventListener('hashchange', onHash);
+    };
   }, []);
 
   // Show protected links only after mount + when logged in (avoids hydration mismatch)
@@ -43,6 +50,18 @@ export function Navbar() {
         { href: '/blog', label: 'Blog' },
       ]
     : PUBLIC_LINKS;
+
+  // Active-link aware of hash links like "/#pricing"
+  const isLinkActive = (href: string) => {
+    if (href.includes('#')) {
+      const [base, frag] = href.split('#');
+      const basePath = base || '/';
+      return pathname === basePath && hash === `#${frag}`;
+    }
+    // Plain path is active only when no hash is present (so "/#pricing" doesn't also light up "Home")
+    if (href === '/') return pathname === '/' && !hash;
+    return pathname === href;
+  };
 
   return (
     <>
@@ -81,9 +100,10 @@ export function Navbar() {
             {/* Desktop Nav — pill container */}
             <div className="hidden lg:flex items-center gap-1 px-2 py-1.5 rounded-2xl bg-white/4 border border-white/8 backdrop-blur-sm">
               {navLinks.map((link) => {
-                const isActive = pathname === link.href;
+                const isActive = isLinkActive(link.href);
                 return (
                   <Link key={link.href} href={link.href}
+                    onClick={() => setHash(link.href.includes('#') ? '#' + link.href.split('#')[1] : '')}
                     className={`relative px-3.5 py-1.5 rounded-xl text-[13px] font-medium transition-all duration-200 ${
                       isActive
                         ? 'text-white'
@@ -180,12 +200,12 @@ export function Navbar() {
               {navLinks.map((link) => (
                 <Link key={link.href} href={link.href} onClick={() => setMobileOpen(false)}
                   className={`flex items-center justify-between px-4 py-3 rounded-xl text-sm font-medium transition-all ${
-                    pathname === link.href
+                    isLinkActive(link.href)
                       ? 'bg-gradient-to-r from-[#00D4FF]/15 to-[#7B2FFF]/15 text-[#00D4FF] border border-[#00D4FF]/20'
                       : 'text-[#8BA8C2] hover:text-white hover:bg-white/5'
                   }`}>
                   {link.label}
-                  {pathname === link.href && <span className="w-1.5 h-1.5 rounded-full bg-[#00D4FF]" />}
+                  {isLinkActive(link.href) && <span className="w-1.5 h-1.5 rounded-full bg-[#00D4FF]" />}
                 </Link>
               ))}
               <div className="pt-3 grid grid-cols-2 gap-2">
