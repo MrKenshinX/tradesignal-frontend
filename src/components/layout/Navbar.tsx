@@ -184,11 +184,14 @@ export function Navbar() {
               )}
             </div>
 
-            {/* Mobile toggle */}
-            <button className="lg:hidden relative w-9 h-9 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-[#8BA8C2] hover:text-white transition-colors"
-              onClick={() => setMobileOpen(!mobileOpen)}>
-              {mobileOpen ? <X size={18} /> : <Menu size={18} />}
-            </button>
+            {/* Mobile toggle + bell */}
+            <div className="lg:hidden flex items-center gap-2">
+              {mounted && user && <NotificationBell />}
+              <button className="relative w-9 h-9 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-[#8BA8C2] hover:text-white transition-colors"
+                onClick={() => setMobileOpen(!mobileOpen)}>
+                {mobileOpen ? <X size={18} /> : <Menu size={18} />}
+              </button>
+            </div>
           </div>
         </div>
 
