@@ -14,6 +14,7 @@ export default function HomePage() {
   return (
     <SWRProvider>
       <Navbar />
+      <div className="h-14 lg:h-0" aria-hidden="true" />
       <LiveTickerBar />
       <HeroSection />
       <StatsSection />

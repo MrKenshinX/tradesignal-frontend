@@ -74,7 +74,7 @@ export function Navbar() {
         <div className={`absolute inset-0 transition-all duration-500 ${
           scrolled
             ? 'bg-[#060B18]/85 backdrop-blur-2xl border-b border-white/5 shadow-[0_4px_30px_rgba(0,0,0,0.5)]'
-            : 'bg-transparent'
+            : 'bg-[#060B18]/70 backdrop-blur-xl lg:bg-transparent lg:backdrop-blur-none'
         }`} />
 
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

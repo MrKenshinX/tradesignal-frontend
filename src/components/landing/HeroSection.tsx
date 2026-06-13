@@ -133,7 +133,7 @@ export function HeroSection() {
         </h1>
 
         <p className={`max-w-2xl text-[#8BA8C2] text-lg sm:text-xl leading-relaxed mb-10 transition-all duration-700 delay-200 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'}`}>
-          RSI · MACD · Bollinger Bands · EMA · Stochastic · ATR<br className="hidden sm:block" />
+          RSI · MACD · Bollinger Bands · EMA · Stochastic · ATR<br />
           Auto Stop-Loss & Take-Profit. Data real dari Yahoo Finance, Finnhub & Binance.
         </p>
 
