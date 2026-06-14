@@ -25,7 +25,7 @@ const EDUKASI_SLUGS = [
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const now = new Date();
-  const staticPages = ['', '/blog', '/edukasi', '/tools', '/contact', '/privacy', '/terms', '/disclaimer', '/auth/login', '/auth/register'];
+  const staticPages = ['', '/blog', '/edukasi', '/tools', '/game', '/contact', '/privacy', '/terms', '/disclaimer', '/auth/login', '/auth/register'];
 
   return [
     ...staticPages.map((p) => ({

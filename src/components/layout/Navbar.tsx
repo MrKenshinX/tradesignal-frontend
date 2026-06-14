@@ -11,6 +11,7 @@ const PUBLIC_LINKS = [
   { href: '/', label: 'Home' },
   { href: '/#pricing', label: 'Harga' },
   { href: '/tools', label: 'Tools' },
+  { href: '/game', label: 'Game' },
   { href: '/edukasi', label: 'Edukasi' },
   { href: '/blog', label: 'Blog' },
 ];
@@ -46,6 +47,7 @@ export function Navbar() {
         { href: '/screener', label: 'Screener' },
         { href: '/portfolio', label: 'Portfolio' },
         { href: '/tools', label: 'Tools' },
+        { href: '/game', label: 'Game' },
         { href: '/upgrade', label: 'Harga' },
         { href: '/edukasi', label: 'Edukasi' },
         { href: '/blog', label: 'Blog' },
