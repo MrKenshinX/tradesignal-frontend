@@ -4,9 +4,10 @@ import { Shield, Target, Clock, ExternalLink, TrendingUp, TrendingDown, Activity
 
 interface Props {
   signal: Signal;
+  onClick?: () => void;
 }
 
-export function SignalCard({ signal }: Props) {
+export function SignalCard({ signal, onClick }: Props) {
   const action = signalLabel(signal.signal_type);
   const market = marketLabel(signal.category);
   const isBuy = action === 'BUY';
@@ -30,8 +31,15 @@ export function SignalCard({ signal }: Props) {
     : 'text-[#4A6080]';
 
   return (
-    <div className={`relative p-5 rounded-2xl glass border ${borderCls} transition-all duration-300 hover:scale-[1.01] group`}
+    <div onClick={onClick} className={`relative p-5 rounded-2xl glass border ${borderCls} transition-all duration-300 hover:scale-[1.01] group ${onClick ? 'cursor-pointer' : ''}`}
       style={{ background: 'rgba(6,11,24,0.6)', backdropFilter: 'blur(12px)' }}>
+
+      {/* Hint klik untuk detail */}
+      {onClick && (
+        <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity">
+          <span className="text-[8px] text-[#00D4FF] bg-[#00D4FF]/10 px-1.5 py-0.5 rounded border border-[#00D4FF]/20">Lihat grafik →</span>
+        </div>
+      )}
 
       {/* Strong signal top bar */}
       {isStrong && (
@@ -141,6 +149,7 @@ export function SignalCard({ signal }: Props) {
         </div>
         {isIDN && (
           <a href="https://ajaib.onelink.me/SIjL/q0at7dq2" target="_blank" rel="noopener noreferrer"
+            onClick={(e) => e.stopPropagation()}
             className="flex items-center gap-1 text-[9px] text-[#00D4FF] hover:text-white transition-colors font-bold">
             Beli di Ajaib <ExternalLink size={8} />
           </a>

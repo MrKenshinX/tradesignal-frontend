@@ -26,6 +26,7 @@ export interface Signal {
   ema200: number | null;
   timeframe: string;
   is_active: boolean;
+  notes: string | null;
   created_at: string;
   updated_at: string;
 }

@@ -5,9 +5,10 @@ import { Footer } from '@/components/layout/Footer';
 import { SWRProvider } from '@/components/providers/SWRProvider';
 import { AuthGuard } from '@/components/auth/AuthGuard';
 import { SignalCard } from '@/components/signals/SignalCard';
+import { SignalDetailModal } from '@/components/signals/SignalDetailModal';
 import { useSignals } from '@/hooks/useMarketData';
 import { Zap, RefreshCw, Search } from 'lucide-react';
-import { signalLabel } from '@/types';
+import { signalLabel, Signal } from '@/types';
 
 function SignalsContent() {
   const { data: signals, isLoading, mutate } = useSignals();
@@ -16,6 +17,7 @@ function SignalsContent() {
   const [action, setAction] = useState<'ALL' | 'BUY' | 'SELL' | 'HOLD'>('ALL');
   const [minConf, setMinConf] = useState(0);
   const [sort, setSort] = useState<'confidence' | 'updated_at' | 'score'>('confidence');
+  const [selectedSignal, setSelectedSignal] = useState<Signal | null>(null);
 
   const filtered = (signals || [])
     .filter(s => {
@@ -117,10 +119,12 @@ function SignalsContent() {
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {filtered.map(s => <SignalCard key={s.id} signal={s} />)}
+            {filtered.map(s => <SignalCard key={s.id} signal={s} onClick={() => setSelectedSignal(s)} />)}
           </div>
         )}
       </div>
+
+      <SignalDetailModal signal={selectedSignal} onClose={() => setSelectedSignal(null)} />
     </div>
   );
 }
