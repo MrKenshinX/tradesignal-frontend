@@ -3,12 +3,16 @@ import './globals.css';
 import Script from 'next/script';
 
 export const metadata: Metadata = {
+  metadataBase: new URL('https://tradesignalpro.web.id'),
   title: {
     default: 'TradeSignal Pro — Sinyal Trading IDN, Saham Asing & Crypto Real-Time',
     template: '%s | TradeSignal Pro',
   },
   description: 'Platform sinyal trading otomatis berbasis AI untuk saham Indonesia, saham asing, dan cryptocurrency. RSI, MACD, Bollinger Bands. Auto SL/TP. Data real-time 24/7.',
   keywords: ['sinyal trading', 'trading signal', 'saham indonesia', 'crypto trading', 'analisis teknikal', 'RSI MACD'],
+  alternates: {
+    canonical: '/',
+  },
   openGraph: {
     title: 'TradeSignal Pro — Sinyal Trading Real-Time',
     description: 'Sinyal trading otomatis berbasis AI. Saham IDN, Asing & Crypto.',
@@ -47,6 +51,32 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Orbitron:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              '@context': 'https://schema.org',
+              '@type': 'Organization',
+              name: 'TradeSignal Pro',
+              url: 'https://tradesignalpro.web.id',
+              logo: 'https://tradesignalpro.web.id/icon-512.png',
+              description: 'Platform sinyal trading otomatis berbasis AI untuk saham Indonesia, saham asing, dan cryptocurrency.',
+              sameAs: [],
+            }),
+          }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              '@context': 'https://schema.org',
+              '@type': 'WebSite',
+              name: 'TradeSignal Pro',
+              url: 'https://tradesignalpro.web.id',
+              inLanguage: 'id-ID',
+            }),
+          }}
+        />
       </head>
       <body className="bg-[#060B18] text-[#E8F4FD]">
         {children}

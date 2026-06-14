@@ -1,6 +1,7 @@
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
 import Link from 'next/link';
+import type { Metadata } from 'next';
 import { ArrowLeft, Clock, BookOpen, Zap } from 'lucide-react';
 
 const ARTICLES: Record<string, { title: string; category: string; date: string; readTime: string; intro: string; sections: { h: string; p: string }[] }> = {
@@ -102,6 +103,31 @@ export function generateStaticParams() {
   return Object.keys(ARTICLES).map(slug => ({ slug }));
 }
 
+export function generateMetadata({ params }: { params: { slug: string } }): Metadata {
+  const article = ARTICLES[params.slug];
+  if (!article) return { title: 'Artikel tidak ditemukan' };
+  const desc = article.intro.length > 155 ? article.intro.slice(0, 152) + '...' : article.intro;
+  const url = `https://tradesignalpro.web.id/blog/${params.slug}/`;
+  return {
+    title: article.title,
+    description: desc,
+    alternates: { canonical: `/blog/${params.slug}/` },
+    openGraph: {
+      title: article.title,
+      description: desc,
+      url,
+      type: 'article',
+      publishedTime: article.date,
+      images: [{ url: '/og-image.png', width: 1200, height: 630, alt: article.title }],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: article.title,
+      description: desc,
+    },
+  };
+}
+
 export default function BlogArticlePage({ params }: { params: { slug: string } }) {
   const article = ARTICLES[params.slug];
 
@@ -122,6 +148,25 @@ export default function BlogArticlePage({ params }: { params: { slug: string } }
 
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            '@context': 'https://schema.org',
+            '@type': 'Article',
+            headline: article.title,
+            description: article.intro,
+            datePublished: article.date,
+            author: { '@type': 'Organization', name: 'TradeSignal Pro' },
+            publisher: {
+              '@type': 'Organization',
+              name: 'TradeSignal Pro',
+              logo: { '@type': 'ImageObject', url: 'https://tradesignalpro.web.id/icon-512.png' },
+            },
+            mainEntityOfPage: `https://tradesignalpro.web.id/blog/${params.slug}/`,
+          }),
+        }}
+      />
       <Navbar />
       <div className="min-h-screen bg-[#060B18] pt-24 pb-16">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">

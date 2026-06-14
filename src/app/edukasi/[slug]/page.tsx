@@ -79,6 +79,24 @@ export function generateStaticParams() {
   return Object.keys(MODULES).map(slug => ({ slug }));
 }
 
+export function generateMetadata({ params }: { params: { slug: string } }): import('next').Metadata {
+  const eduModule = MODULES[params.slug];
+  if (!eduModule) return { title: 'Modul tidak ditemukan' };
+  const desc = eduModule.intro.length > 155 ? eduModule.intro.slice(0, 152) + '...' : eduModule.intro;
+  return {
+    title: `${eduModule.title} — Edukasi Trading`,
+    description: desc,
+    alternates: { canonical: `/edukasi/${params.slug}/` },
+    openGraph: {
+      title: eduModule.title,
+      description: desc,
+      url: `https://tradesignalpro.web.id/edukasi/${params.slug}/`,
+      type: 'article',
+      images: [{ url: '/og-image.png', width: 1200, height: 630, alt: eduModule.title }],
+    },
+  };
+}
+
 const LEVEL_COLOR: Record<string, string> = {
   'Pemula': 'bg-[#00E676]/10 text-[#00E676] border-[#00E676]/30',
   'Menengah': 'bg-[#FFD700]/10 text-[#FFD700] border-[#FFD700]/30',
