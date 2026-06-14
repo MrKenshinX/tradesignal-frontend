@@ -10,6 +10,7 @@ import { PLAN_DISPLAY, PLAN_COLOR } from '@/types';
 const PUBLIC_LINKS = [
   { href: '/', label: 'Home' },
   { href: '/#pricing', label: 'Harga' },
+  { href: '/tools', label: 'Tools' },
   { href: '/edukasi', label: 'Edukasi' },
   { href: '/blog', label: 'Blog' },
 ];
@@ -44,6 +45,7 @@ export function Navbar() {
         { href: '/signals', label: 'Sinyal' },
         { href: '/screener', label: 'Screener' },
         { href: '/portfolio', label: 'Portfolio' },
+        { href: '/tools', label: 'Tools' },
         { href: '/upgrade', label: 'Harga' },
         { href: '/edukasi', label: 'Edukasi' },
         { href: '/blog', label: 'Blog' },
