@@ -118,6 +118,27 @@ const PLANS = [
 
 export function PricingSection() {
   const { user } = useAuthStore();
+
+  // Format tanggal berakhir langganan
+  const expiryText = (() => {
+    if (!user?.subscription_expires) return null;
+    const d = new Date(user.subscription_expires);
+    if (isNaN(d.getTime())) return null;
+    return d.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+  })();
+
+  // Sisa hari
+  const daysLeft = (() => {
+    if (!user?.subscription_expires) return null;
+    const d = new Date(user.subscription_expires);
+    if (isNaN(d.getTime())) return null;
+    return Math.ceil((d.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+  })();
+
+  const planDisplay: Record<string, string> = {
+    free: 'Free', idn: 'Premium IDN', asing: 'Premium Asing', crypto: 'Premium Crypto', vip: 'VIP All-Access',
+  };
+
   return (
     <section className="relative py-24 bg-[#060B18]" id="pricing">
       <div className="absolute inset-0 bg-grid opacity-15 pointer-events-none" />
@@ -131,26 +152,63 @@ export function PricingSection() {
             <Crown size={12} /> Harga & Paket
           </div>
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-display font-bold text-white mb-4">
-            Mulai Gratis,<br />
-            <span className="bg-gradient-to-r from-[#00E676] to-[#00D4FF] bg-clip-text text-transparent">Upgrade Kapan Saja</span>
+            {user && user.plan !== 'free' ? (
+              <>Langganan <span className="bg-gradient-to-r from-[#00E676] to-[#00D4FF] bg-clip-text text-transparent">Aktif</span></>
+            ) : (
+              <>Mulai Gratis,<br /><span className="bg-gradient-to-r from-[#00E676] to-[#00D4FF] bg-clip-text text-transparent">Upgrade Kapan Saja</span></>
+            )}
           </h2>
           <p className="max-w-xl mx-auto text-[#8BA8C2] text-lg">
-            Pilih paket sesuai kebutuhanmu. Semua paket termasuk akses sinyal real-time dari database Supabase kami.
+            {user && user.plan !== 'free'
+              ? 'Kelola atau tingkatkan paket langgananmu kapan saja.'
+              : 'Pilih paket sesuai kebutuhanmu. Semua paket termasuk akses sinyal real-time dari database kami.'}
           </p>
         </div>
+
+        {/* Banner status langganan untuk user yang sudah berlangganan */}
+        {user && user.plan !== 'free' && (
+          <div className="max-w-2xl mx-auto mb-12 p-6 rounded-2xl glass border border-[#00E676]/30 bg-[#00E676]/5">
+            <div className="flex items-center justify-between flex-wrap gap-4">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-xl bg-[#00E676]/10 flex items-center justify-center">
+                  <Crown size={24} className="text-[#00E676]" />
+                </div>
+                <div>
+                  <p className="text-[#8BA8C2] text-xs">Paket Aktif</p>
+                  <p className="text-white font-bold text-lg">{planDisplay[user.plan] ?? user.plan}</p>
+                </div>
+              </div>
+              <div className="text-right">
+                <p className="text-[#8BA8C2] text-xs">Berlaku hingga</p>
+                <p className="text-white font-semibold">{expiryText ?? '—'}</p>
+                {daysLeft !== null && (
+                  <p className={`text-xs mt-0.5 ${daysLeft <= 7 ? 'text-[#FF5252]' : 'text-[#00E676]'}`}>
+                    {daysLeft > 0 ? `${daysLeft} hari lagi` : 'Sudah berakhir'}
+                  </p>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Plans grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
           {PLANS.map((plan) => {
             const Icon = plan.icon;
+            const planKey = PLAN_MAP[plan.id] ?? (plan.id === 'FREE' ? 'free' : '');
+            const isCurrentPlan = user && planKey === user.plan;
             return (
               <div
                 key={plan.id}
-                className={`relative flex flex-col p-6 rounded-2xl glass border ${plan.borderColor} transition-all duration-300 hover:scale-[1.02] hover:shadow-card ${
-                  plan.highlighted ? 'ring-1 ring-[#00D4FF]/30 shadow-glow-cyan-sm' : ''
-                }`}
+                className={`relative flex flex-col p-6 rounded-2xl glass border transition-all duration-300 hover:scale-[1.02] hover:shadow-card ${
+                  isCurrentPlan ? 'border-[#00E676] ring-1 ring-[#00E676]/40' : plan.borderColor
+                } ${plan.highlighted && !isCurrentPlan ? 'ring-1 ring-[#00D4FF]/30 shadow-glow-cyan-sm' : ''}`}
               >
-                {plan.badge && (
+                {isCurrentPlan ? (
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-[#00E676] text-[#060B18] text-[10px] font-bold whitespace-nowrap">
+                    PAKET AKTIF
+                  </div>
+                ) : plan.badge && (
                   <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-gradient-to-r from-[#00D4FF] to-[#7B2FFF] text-white text-[10px] font-bold whitespace-nowrap">
                     {plan.badge}
                   </div>
@@ -178,18 +236,24 @@ export function PricingSection() {
                   ))}
                 </ul>
 
-                <Link
-                  href={
-                    plan.id === 'FREE'
-                      ? '/auth/register'
-                      : user
-                        ? '/upgrade?plan=' + (PLAN_MAP[plan.id] ?? '')
-                        : '/auth/register?plan=' + plan.id
-                  }
-                  className={`block text-center py-2.5 px-4 rounded-xl text-sm transition-all duration-200 ${plan.ctaClass}`}
-                >
-                  {plan.cta}
-                </Link>
+                {isCurrentPlan ? (
+                  <div className="block text-center py-2.5 px-4 rounded-xl text-sm bg-[#00E676]/10 text-[#00E676] font-semibold border border-[#00E676]/30 cursor-default">
+                    ✓ Paket Aktif
+                  </div>
+                ) : (
+                  <Link
+                    href={
+                      plan.id === 'FREE'
+                        ? (user ? '/dashboard' : '/auth/register')
+                        : user
+                          ? '/upgrade?plan=' + (PLAN_MAP[plan.id] ?? '')
+                          : '/auth/register?plan=' + plan.id
+                    }
+                    className={`block text-center py-2.5 px-4 rounded-xl text-sm transition-all duration-200 ${plan.ctaClass}`}
+                  >
+                    {plan.id === 'FREE' && user ? 'Buka Dashboard' : plan.cta}
+                  </Link>
+                )}
               </div>
             );
           })}

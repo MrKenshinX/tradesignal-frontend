@@ -95,6 +95,7 @@ export interface User {
   status: 'active' | 'inactive' | 'suspended';
   avatar?: string;
   created_at?: string;
+  subscription_expires?: string | null;
 }
 
 // UI plan display map
