@@ -1,26 +1,17 @@
 'use client';
-import { useState } from 'react';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
 import { SWRProvider } from '@/components/providers/SWRProvider';
 import { AuthGuard } from '@/components/auth/AuthGuard';
-import { SignalCard } from '@/components/signals/SignalCard';
 import { MarketOverview } from '@/components/dashboard/MarketOverview';
 import WatchlistWidget from '@/components/dashboard/WatchlistWidget';
+import { TrackRecordWidget } from '@/components/dashboard/TrackRecordWidget';
 import { useSignals } from '@/hooks/useMarketData';
 import { Zap, TrendingUp, BarChart2, RefreshCw } from 'lucide-react';
 import { signalLabel } from '@/types';
 
 function DashboardContent() {
   const { data: signals, isLoading, mutate } = useSignals();
-  const [catFilter, setCatFilter] = useState<'all' | 'idn' | 'asing' | 'crypto'>('all');
-  const [actFilter, setActFilter] = useState<'ALL' | 'BUY' | 'SELL'>('ALL');
-
-  const filtered = (signals || []).filter((s) => {
-    if (catFilter !== 'all' && s.category !== catFilter) return false;
-    if (actFilter !== 'ALL' && signalLabel(s.signal_type) !== actFilter) return false;
-    return true;
-  });
 
   const buyCount = signals?.filter(s => signalLabel(s.signal_type) === 'BUY').length ?? 0;
   const sellCount = signals?.filter(s => signalLabel(s.signal_type) === 'SELL').length ?? 0;
@@ -78,52 +69,17 @@ function DashboardContent() {
               <WatchlistWidget />
             </div>
 
-            {/* Signals */}
+            {/* Track Record — menggantikan daftar sinyal (ada di halaman /signals) */}
             <div className="mt-6">
-              <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-4">
-                <h2 className="text-base font-bold text-white flex items-center gap-2">
-                  <Zap size={16} className="text-[#00D4FF]" /> Sinyal Trading
-                </h2>
-                <div className="flex gap-2 flex-wrap">
-                  <div className="flex gap-1 p-1 rounded-lg" style={{ background: 'rgba(255,255,255,0.04)' }}>
-                    {(['all','idn','asing','crypto'] as const).map(t => (
-                      <button key={t} onClick={() => setCatFilter(t)}
-                        className={`px-2.5 py-1 rounded-md text-xs font-bold uppercase transition-all ${
-                          catFilter === t ? 'bg-[#00D4FF] text-[#060B18]' : 'text-[#8BA8C2] hover:text-white'
-                        }`}>{t}</button>
-                    ))}
-                  </div>
-                  <div className="flex gap-1 p-1 rounded-lg" style={{ background: 'rgba(255,255,255,0.04)' }}>
-                    {(['ALL','BUY','SELL'] as const).map(a => (
-                      <button key={a} onClick={() => setActFilter(a)}
-                        className={`px-2.5 py-1 rounded-md text-xs font-bold transition-all ${
-                          actFilter === a
-                            ? a === 'BUY' ? 'bg-[#00E676] text-[#060B18]'
-                            : a === 'SELL' ? 'bg-[#FF4757] text-white'
-                            : 'bg-[#00D4FF] text-[#060B18]'
-                            : 'text-[#8BA8C2] hover:text-white'
-                        }`}>{a}</button>
-                    ))}
-                  </div>
-                </div>
-              </div>
+              <TrackRecordWidget />
+            </div>
 
-              {isLoading ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {Array.from({ length: 6 }).map((_, i) => (
-                    <div key={i} className="h-52 rounded-2xl animate-pulse" style={{ background: 'rgba(255,255,255,0.04)' }} />
-                  ))}
-                </div>
-              ) : filtered.length === 0 ? (
-                <div className="text-center py-16 text-[#4A6080]">
-                  <Zap size={32} className="mx-auto mb-3 opacity-20" />
-                  <p className="text-sm">Tidak ada sinyal untuk filter ini</p>
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {filtered.map((signal) => <SignalCard key={signal.id} signal={signal} />)}
-                </div>
-              )}
+            {/* Link ke halaman sinyal lengkap */}
+            <div className="mt-6 text-center">
+              <a href="/signals"
+                className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-[#00D4FF]/10 border border-[#00D4FF]/30 text-[#00D4FF] font-bold text-sm hover:bg-[#00D4FF]/20 transition-all">
+                <Zap size={16} /> Lihat Semua Sinyal Trading →
+              </a>
             </div>
           </div>
         </div>

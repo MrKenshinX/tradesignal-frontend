@@ -115,3 +115,27 @@ export const PLAN_COLOR: Record<User['plan'], string> = {
   crypto: 'text-[#FFD700]',
   vip: 'text-[#00E676]',
 };
+
+// --- Track Record (dari /api/signals/track-record/*) ---
+export interface TrackRecordStats {
+  wins: number;
+  losses: number;
+  total_closed: number;
+  win_rate: number | null;
+  avg_win: number;
+  avg_loss: number;
+  pending: number;
+}
+
+export interface SignalResult {
+  id: number;
+  result: 'win' | 'loss';
+  actual_return: number | null;
+  closed_at: string;
+  symbol: string;
+  category: 'idn' | 'asing' | 'crypto';
+  signal_type: string;
+  price_entry: number | null;
+  price_target: number | null;
+  price_stop_loss: number | null;
+}
