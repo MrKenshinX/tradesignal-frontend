@@ -206,9 +206,47 @@ export default function BlogArticlePage({ params }: { params: { slug: string } }
               <Zap size={14} fill="white" /> Mulai Gratis →
             </Link>
           </div>
+
+          {/* Artikel Lainnya — internal linking untuk SEO */}
+          {(() => {
+            const others = Object.entries(ARTICLES).filter(([slug]) => slug !== params.slug).slice(0, 3);
+            return (
+              <div className="mt-12">
+                <h3 className="text-white font-bold text-lg mb-4">Artikel Lainnya</h3>
+                <div className="grid gap-3">
+                  {others.map(([slug, a]) => (
+                    <Link key={slug} href={`/blog/${slug}/`}
+                      className="flex items-center justify-between gap-4 p-4 rounded-xl glass border border-white/8 hover:border-[#00D4FF]/30 transition-colors group">
+                      <div>
+                        <span className="text-[9px] font-semibold px-2 py-0.5 rounded-full bg-[#00D4FF]/10 text-[#00D4FF] border border-[#00D4FF]/20">{a.category}</span>
+                        <p className="text-white text-sm font-semibold mt-1.5 group-hover:text-[#00D4FF] transition-colors">{a.title}</p>
+                      </div>
+                      <ArrowLeft size={16} className="text-[#4A6080] rotate-180 shrink-0" />
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            );
+          })()}
         </div>
       </div>
       <Footer />
+
+      {/* Breadcrumb JSON-LD */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            '@context': 'https://schema.org',
+            '@type': 'BreadcrumbList',
+            itemListElement: [
+              { '@type': 'ListItem', position: 1, name: 'Beranda', item: 'https://tradesignalpro.web.id/' },
+              { '@type': 'ListItem', position: 2, name: 'Blog', item: 'https://tradesignalpro.web.id/blog/' },
+              { '@type': 'ListItem', position: 3, name: article.title, item: `https://tradesignalpro.web.id/blog/${params.slug}/` },
+            ],
+          }),
+        }}
+      />
     </>
   );
 }
