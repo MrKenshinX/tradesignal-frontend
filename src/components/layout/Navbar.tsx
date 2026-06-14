@@ -40,7 +40,6 @@ export function Navbar() {
   // Show protected links only after mount + when logged in (avoids hydration mismatch)
   const navLinks = mounted && user
     ? [
-        { href: '/', label: 'Home' },
         { href: '/dashboard', label: 'Dashboard' },
         { href: '/signals', label: 'Sinyal' },
         { href: '/screener', label: 'Screener' },
