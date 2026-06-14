@@ -4,7 +4,7 @@
 // All endpoints require Bearer JWT except health
 // =============================================
 import axios from 'axios';
-import type { ApiResponse, Signal, MarketData, PortfolioPosition, User, TrackRecordStats, SignalResult } from '@/types';
+import type { ApiResponse, Signal, MarketData, PortfolioPosition, User, TrackRecordStats, SignalResult, NewsItem } from '@/types';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || '';
 
@@ -95,6 +95,10 @@ export const fetchers = {
   },
   trackRecordRecent: async (): Promise<SignalResult[]> => {
     const res = await api.get<{ success: boolean; data: SignalResult[] }>('/api/signals/track-record/recent?limit=15');
+    return res.data.data ?? [];
+  },
+  news: async (): Promise<NewsItem[]> => {
+    const res = await api.get<{ success: boolean; data: NewsItem[] }>('/api/news');
     return res.data.data ?? [];
   },
 };

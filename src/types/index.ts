@@ -139,3 +139,15 @@ export interface SignalResult {
   price_target: number | null;
   price_stop_loss: number | null;
 }
+
+// --- News (dari /api/news) ---
+export interface NewsItem {
+  id: string;
+  category: 'general' | 'crypto';
+  headline: string;
+  summary: string;
+  source: string;
+  url: string;
+  image: string;
+  datetime: number;
+}

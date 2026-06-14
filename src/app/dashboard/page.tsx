@@ -6,6 +6,7 @@ import { AuthGuard } from '@/components/auth/AuthGuard';
 import { MarketOverview } from '@/components/dashboard/MarketOverview';
 import WatchlistWidget from '@/components/dashboard/WatchlistWidget';
 import { TrackRecordWidget } from '@/components/dashboard/TrackRecordWidget';
+import { NewsWidget } from '@/components/dashboard/NewsWidget';
 import { useSignals } from '@/hooks/useMarketData';
 import { Zap, TrendingUp, BarChart2, RefreshCw } from 'lucide-react';
 import { signalLabel } from '@/types';
@@ -72,6 +73,11 @@ function DashboardContent() {
             {/* Track Record — menggantikan daftar sinyal (ada di halaman /signals) */}
             <div className="mt-6">
               <TrackRecordWidget />
+            </div>
+
+            {/* Berita Pasar */}
+            <div className="mt-6">
+              <NewsWidget />
             </div>
 
             {/* Link ke halaman sinyal lengkap */}
