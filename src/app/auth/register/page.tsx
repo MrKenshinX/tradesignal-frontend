@@ -27,10 +27,23 @@ function RegisterForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
     setError('');
+
+    // Validasi sebelum kirim
+    const email = form.email.trim().toLowerCase();
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+    if (!emailRegex.test(email)) {
+      setError('Format email tidak valid. Contoh: nama@email.com');
+      return;
+    }
+    if (form.password.length < 8) {
+      setError('Password minimal 8 karakter.');
+      return;
+    }
+
+    setLoading(true);
     try {
-      const res = await authAPI.register(form);
+      const res = await authAPI.register({ ...form, email });
       setToken(res.data.token);
       setUser(res.data.user);
       router.push(plan ? `/upgrade?plan=${plan}` : '/dashboard');
