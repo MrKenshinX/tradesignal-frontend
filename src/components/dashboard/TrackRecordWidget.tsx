@@ -56,6 +56,13 @@ export function TrackRecordWidget() {
         </div>
       )}
 
+      {/* Tanggal mulai track record (transparansi) */}
+      {stats?.since && (
+        <p className="text-[#4A6080] text-[11px] mb-3">
+          📅 Track record dihitung sejak {new Date(stats.since).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })} (setelah penyempurnaan sistem sinyal).
+        </p>
+      )}
+
       {/* Riwayat hasil terbaru */}
       {recent && recent.length > 0 ? (
         <div>

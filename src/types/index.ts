@@ -125,6 +125,7 @@ export interface TrackRecordStats {
   avg_win: number;
   avg_loss: number;
   pending: number;
+  since?: string | null;
 }
 
 export interface SignalResult {
