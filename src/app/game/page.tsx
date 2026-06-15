@@ -4,15 +4,22 @@ import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
 import { AuthGuard } from '@/components/auth/AuthGuard';
 import { gameAPI } from '@/lib/api';
-import { Gamepad2, Wallet, TrendingUp, Trophy, ArrowRight, Zap, Loader2 } from 'lucide-react';
+import { Gamepad2, Wallet, TrendingUp, Trophy, ArrowRight, Zap, Loader2, Landmark, Lock, Building2 } from 'lucide-react';
 
 interface Business {
   id: string; name: string; emoji: string;
   income: number; count: number; nextCost: number; incomeTotal: number;
 }
+interface Deposit {
+  id: number; amount: number; rate: number; termLabel: string;
+  secondsLeft: number; matured: boolean; payout: number;
+}
+interface DepositTerm { id: string; label: string; rate: number; }
 interface GameState {
-  cash: number; incomePerSecond: number; netWorth: number; totalEarned: number;
-  businesses: Business[]; offlineCapHours: number;
+  cash: number; bankBalance: number; incomePerSecond: number; bankRatePerHour: number;
+  netWorth: number; totalEarned: number;
+  businesses: Business[]; deposits: Deposit[]; depositTerms: DepositTerm[];
+  offlineCapHours: number;
 }
 
 const RANKS = [
@@ -37,6 +44,10 @@ function GameContent() {
   const [loading, setLoading] = useState(true);
   const [buying, setBuying] = useState<string | null>(null);
   const [error, setError] = useState('');
+  const [tab, setTab] = useState<'bisnis' | 'bank'>('bisnis');
+  const [bankAmount, setBankAmount] = useState('');
+  const [depositAmount, setDepositAmount] = useState('');
+  const [depositTerm, setDepositTerm] = useState('d30m');
 
   const stateRef = useRef<GameState | null>(null);
   stateRef.current = state;
@@ -97,6 +108,18 @@ function GameContent() {
     }
   };
 
+  const doAction = async (fn: () => Promise<any>, errMsg: string) => {
+    try {
+      const ns = await fn();
+      setState(ns);
+      setDisplayCash(ns.cash);
+      setError('');
+    } catch (e: any) {
+      setError(e?.response?.data?.message || errMsg);
+      setTimeout(() => setError(''), 1800);
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-[#060B18] pt-24 flex items-center justify-center">
@@ -149,7 +172,20 @@ function GameContent() {
           <div className="mb-4 p-3 rounded-xl bg-[#FF4757]/10 border border-[#FF4757]/30 text-[#FF4757] text-sm text-center">{error}</div>
         )}
 
-        {/* Daftar usaha */}
+        {/* Tab switcher */}
+        <div className="flex gap-2 mb-4">
+          <button onClick={() => setTab('bisnis')}
+            className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl font-bold text-sm transition-all ${tab === 'bisnis' ? 'bg-[#00D4FF] text-[#060B18]' : 'bg-white/5 text-[#8BA8C2] border border-white/8'}`}>
+            <Building2 size={15} /> Bisnis
+          </button>
+          <button onClick={() => setTab('bank')}
+            className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl font-bold text-sm transition-all ${tab === 'bank' ? 'bg-[#00D4FF] text-[#060B18]' : 'bg-white/5 text-[#8BA8C2] border border-white/8'}`}>
+            <Landmark size={15} /> Bank
+          </button>
+        </div>
+
+        {/* TAB: BISNIS */}
+        {tab === 'bisnis' && (
         <div className="space-y-2.5">
           {state.businesses.map(b => {
             const affordable = displayCash >= b.nextCost;
@@ -178,6 +214,83 @@ function GameContent() {
             );
           })}
         </div>
+        )}
+
+        {/* TAB: BANK */}
+        {tab === 'bank' && (
+        <div className="space-y-4">
+          {/* Tabungan */}
+          <div className="p-5 rounded-2xl glass border border-white/8">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <Landmark size={18} className="text-[#00D4FF]" />
+                <h3 className="text-white font-bold">Tabungan</h3>
+              </div>
+              <span className="text-[10px] text-[#00E676] bg-[#00E676]/10 px-2 py-0.5 rounded border border-[#00E676]/20">+{state.bankRatePerHour}%/jam</span>
+            </div>
+            <p className="text-[#4A6080] text-xs mb-1">Saldo Bank</p>
+            <p className="font-mono font-black text-2xl text-white mb-3">Rp {fmt(state.bankBalance)}</p>
+            <p className="text-[#4A6080] text-[11px] mb-3">Bunga otomatis tiap detik. Bisa ditarik kapan saja.</p>
+            <input type="number" value={bankAmount} onChange={e => setBankAmount(e.target.value)} placeholder="Jumlah"
+              className="w-full mb-2 px-3 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white font-mono text-sm focus:outline-none focus:border-[#00D4FF]/50" />
+            <div className="grid grid-cols-2 gap-2">
+              <button onClick={() => { const a = parseInt(bankAmount); if (a > 0) { doAction(() => gameAPI.bankDeposit(a), 'Gagal setor'); setBankAmount(''); } }}
+                className="py-2.5 rounded-xl bg-[#00E676] text-[#060B18] font-bold text-sm hover:opacity-90">Setor</button>
+              <button onClick={() => { const a = parseInt(bankAmount); if (a > 0) { doAction(() => gameAPI.bankWithdraw(a), 'Gagal tarik'); setBankAmount(''); } }}
+                className="py-2.5 rounded-xl bg-white/5 border border-white/10 text-white font-bold text-sm hover:bg-white/10">Tarik</button>
+            </div>
+          </div>
+
+          {/* Deposito */}
+          <div className="p-5 rounded-2xl glass border border-white/8">
+            <div className="flex items-center gap-2 mb-3">
+              <Lock size={16} className="text-[#FFD700]" />
+              <h3 className="text-white font-bold">Deposito</h3>
+              <span className="text-[10px] text-[#FFD700]">imbal lebih besar, terkunci</span>
+            </div>
+            {/* Pilih tenor */}
+            <div className="grid grid-cols-3 gap-2 mb-3">
+              {state.depositTerms.map(t => (
+                <button key={t.id} onClick={() => setDepositTerm(t.id)}
+                  className={`p-2 rounded-xl border text-center transition-all ${depositTerm === t.id ? 'bg-[#FFD700]/10 border-[#FFD700]/40' : 'bg-white/3 border-white/8'}`}>
+                  <p className="text-white text-xs font-bold">{t.label}</p>
+                  <p className="text-[#00E676] text-[10px] font-mono">+{(t.rate * 100).toFixed(1)}%</p>
+                </button>
+              ))}
+            </div>
+            <input type="number" value={depositAmount} onChange={e => setDepositAmount(e.target.value)} placeholder="Jumlah deposito"
+              className="w-full mb-2 px-3 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white font-mono text-sm focus:outline-none focus:border-[#FFD700]/50" />
+            <button onClick={() => { const a = parseInt(depositAmount); if (a > 0) { doAction(() => gameAPI.createDeposit(depositTerm, a), 'Gagal buat deposito'); setDepositAmount(''); } }}
+              className="w-full py-2.5 rounded-xl bg-[#FFD700] text-[#060B18] font-bold text-sm hover:opacity-90 mb-4">Buat Deposito</button>
+
+            {/* Deposito aktif */}
+            {state.deposits.length > 0 ? (
+              <div className="space-y-2">
+                <p className="text-[#4A6080] text-[11px] uppercase tracking-wider">Deposito Aktif</p>
+                {state.deposits.map(d => {
+                  const h = Math.floor(d.secondsLeft / 3600);
+                  const m = Math.floor((d.secondsLeft % 3600) / 60);
+                  const s = d.secondsLeft % 60;
+                  return (
+                    <div key={d.id} className="flex items-center justify-between p-3 rounded-xl bg-white/3 border border-white/5">
+                      <div>
+                        <p className="text-white text-sm font-mono font-bold">Rp {fmt(d.amount)} <span className="text-[#00E676] text-xs">→ Rp {fmt(d.payout)}</span></p>
+                        <p className="text-[#4A6080] text-[10px]">{d.termLabel} · {d.matured ? 'Jatuh tempo!' : `sisa ${h}j ${m}m ${s}d`}</p>
+                      </div>
+                      <button onClick={() => doAction(() => gameAPI.claimDeposit(d.id), 'Belum bisa dicairkan')} disabled={!d.matured}
+                        className={`px-3 py-2 rounded-lg font-bold text-xs ${d.matured ? 'bg-[#00E676] text-[#060B18] hover:opacity-90' : 'bg-white/5 text-[#4A6080] cursor-not-allowed'}`}>
+                        Cairkan
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <p className="text-[#4A6080] text-xs text-center py-2">Belum ada deposito aktif.</p>
+            )}
+          </div>
+        </div>
+        )}
 
         {/* Info + CTA */}
         <div className="mt-6 p-4 rounded-2xl glass border border-white/8 text-center">

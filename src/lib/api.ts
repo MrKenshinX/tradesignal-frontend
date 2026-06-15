@@ -113,6 +113,22 @@ export const gameAPI = {
     const res = await api.post('/api/game/business/buy', { businessId });
     return res.data.data;
   },
+  bankDeposit: async (amount: number) => {
+    const res = await api.post('/api/game/bank/deposit', { amount });
+    return res.data.data;
+  },
+  bankWithdraw: async (amount: number) => {
+    const res = await api.post('/api/game/bank/withdraw', { amount });
+    return res.data.data;
+  },
+  createDeposit: async (termId: string, amount: number) => {
+    const res = await api.post('/api/game/deposit/create', { termId, amount });
+    return res.data.data;
+  },
+  claimDeposit: async (depositId: number) => {
+    const res = await api.post('/api/game/deposit/claim', { depositId });
+    return res.data.data;
+  },
 };
 
 // =============================================
