@@ -103,6 +103,18 @@ export const fetchers = {
   },
 };
 
+// ── Game (Trader Tycoon) ──
+export const gameAPI = {
+  getState: async () => {
+    const res = await api.get('/api/game/state');
+    return res.data.data;
+  },
+  buyBusiness: async (businessId: string) => {
+    const res = await api.post('/api/game/business/buy', { businessId });
+    return res.data.data;
+  },
+};
+
 // =============================================
 // Auth API
 // POST /api/auth/register → { success, token, user }
