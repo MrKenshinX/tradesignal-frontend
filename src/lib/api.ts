@@ -189,6 +189,22 @@ export const gameAPI = {
     const res = await api.post('/api/game/mining/sell', { amount });
     return res.data;
   },
+  getCoins: async () => {
+    const res = await api.get('/api/game/coins');
+    return res.data.data;
+  },
+  createCoin: async (name: string, symbol: string, p0: number) => {
+    const res = await api.post('/api/game/coin/create', { name, symbol, p0 });
+    return res.data;
+  },
+  buyCoin: async (coinId: number, qty: number) => {
+    const res = await api.post('/api/game/coin/buy', { coinId, qty });
+    return res.data;
+  },
+  sellCoin: async (coinId: number, qty: number) => {
+    const res = await api.post('/api/game/coin/sell', { coinId, qty });
+    return res.data;
+  },
 };
 
 // =============================================

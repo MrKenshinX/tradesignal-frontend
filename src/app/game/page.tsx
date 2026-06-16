@@ -4,7 +4,7 @@ import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
 import { AuthGuard } from '@/components/auth/AuthGuard';
 import { gameAPI } from '@/lib/api';
-import { Gamepad2, Wallet, TrendingUp, Trophy, ArrowRight, Zap, Loader2, Landmark, Lock, Building2, Medal, Briefcase, LineChart, Sparkles, Cpu } from 'lucide-react';
+import { Gamepad2, Wallet, TrendingUp, Trophy, ArrowRight, Zap, Loader2, Landmark, Lock, Building2, Medal, Briefcase, LineChart, Sparkles, Cpu, Coins } from 'lucide-react';
 
 interface Business {
   id: string; name: string; emoji: string;
@@ -45,7 +45,7 @@ function GameContent() {
   const [loading, setLoading] = useState(true);
   const [buying, setBuying] = useState<string | null>(null);
   const [error, setError] = useState('');
-  const [tab, setTab] = useState<'bisnis' | 'bank' | 'perusahaan' | 'bursa' | 'skill' | 'mining' | 'peringkat'>('bisnis');
+  const [tab, setTab] = useState<'bisnis' | 'bank' | 'perusahaan' | 'bursa' | 'skill' | 'mining' | 'koin' | 'peringkat'>('bisnis');
   const [bankAmount, setBankAmount] = useState('');
   const [depositAmount, setDepositAmount] = useState('');
   const [depositTerm, setDepositTerm] = useState('d30m');
@@ -62,6 +62,10 @@ function GameContent() {
   const [skLoading, setSkLoading] = useState(false);
   const [mining, setMining] = useState<any>(null);
   const [mnLoading, setMnLoading] = useState(false);
+  const [coins, setCoins] = useState<any[]>([]);
+  const [cnLoading, setCnLoading] = useState(false);
+  const [coinQty, setCoinQty] = useState<Record<number, string>>({});
+  const [newCoin, setNewCoin] = useState({ name: '', symbol: '', p0: '100' });
 
   const stateRef = useRef<GameState | null>(null);
   stateRef.current = state;
@@ -189,6 +193,18 @@ function GameContent() {
     return () => clearInterval(id);
   }, [tab, loadMining]);
 
+  // Muat koin saat tab koin aktif (refresh harga tiap 5dtk)
+  const loadCoins = useCallback(() => {
+    gameAPI.getCoins().then(setCoins).catch(() => {});
+  }, []);
+  useEffect(() => {
+    if (tab !== 'koin') return;
+    setCnLoading(true);
+    gameAPI.getCoins().then(setCoins).catch(() => {}).finally(() => setCnLoading(false));
+    const id = setInterval(loadCoins, 5000);
+    return () => clearInterval(id);
+  }, [tab, loadCoins]);
+
   if (loading) {
     return (
       <div className="min-h-screen bg-[#060B18] pt-24 flex items-center justify-center">
@@ -266,6 +282,10 @@ function GameContent() {
           <button onClick={() => setTab('mining')}
             className={`flex-1 min-w-[80px] flex items-center justify-center gap-1.5 py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all ${tab === 'mining' ? 'bg-[#00D4FF] text-[#060B18]' : 'bg-white/5 text-[#8BA8C2] border border-white/8'}`}>
             <Cpu size={14} /> Mining
+          </button>
+          <button onClick={() => setTab('koin')}
+            className={`flex-1 min-w-[70px] flex items-center justify-center gap-1.5 py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all ${tab === 'koin' ? 'bg-[#00D4FF] text-[#060B18]' : 'bg-white/5 text-[#8BA8C2] border border-white/8'}`}>
+            <Coins size={14} /> Koin
           </button>
           <button onClick={() => setTab('peringkat')}
             className={`flex-1 min-w-[90px] flex items-center justify-center gap-1.5 py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all ${tab === 'peringkat' ? 'bg-[#00D4FF] text-[#060B18]' : 'bg-white/5 text-[#8BA8C2] border border-white/8'}`}>
@@ -633,6 +653,75 @@ function GameContent() {
                 );
               })}
             </>
+          )}
+        </div>
+        )}
+
+        {/* TAB: KOIN (launchpad) */}
+        {tab === 'koin' && (
+        <div className="space-y-3">
+          {/* Bikin koin */}
+          <div className="p-5 rounded-2xl glass border border-[#7B2FFF]/20">
+            <div className="flex items-center gap-2 mb-2">
+              <Coins size={18} className="text-[#7B2FFF]" />
+              <h3 className="text-white font-bold">Bikin Crypto Sendiri</h3>
+            </div>
+            <p className="text-[#4A6080] text-xs mb-3">Biaya luncur Rp 2.000.000. Koinmu bisa dibeli/dijual pemain lain. Untung kalau orang ramai beli (harga naik).</p>
+            <div className="grid grid-cols-2 gap-2 mb-2">
+              <input value={newCoin.name} onChange={e => setNewCoin(c => ({ ...c, name: e.target.value }))} placeholder="Nama (mis. MoonCoin)" maxLength={30}
+                className="px-3 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-sm focus:outline-none focus:border-[#7B2FFF]/50" />
+              <input value={newCoin.symbol} onChange={e => setNewCoin(c => ({ ...c, symbol: e.target.value.toUpperCase() }))} placeholder="Simbol (mis. MOON)" maxLength={6}
+                className="px-3 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-sm font-mono uppercase focus:outline-none focus:border-[#7B2FFF]/50" />
+            </div>
+            <div className="flex gap-2">
+              <input type="number" value={newCoin.p0} onChange={e => setNewCoin(c => ({ ...c, p0: e.target.value }))} placeholder="Harga awal (10-10000)"
+                className="flex-1 px-3 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white font-mono text-sm focus:outline-none focus:border-[#7B2FFF]/50" />
+              <button onClick={() => { const p0 = parseInt(newCoin.p0); if (newCoin.name.trim().length >= 2 && newCoin.symbol.trim().length >= 2 && p0 >= 10) { doAction(async () => { const r = await gameAPI.createCoin(newCoin.name.trim(), newCoin.symbol.trim(), p0); setCoins(r.coins); return r.state; }, 'Gagal bikin koin'); setNewCoin({ name: '', symbol: '', p0: '100' }); } }}
+                disabled={displayCash < 2000000}
+                className={`px-4 py-2.5 rounded-xl font-bold text-sm ${displayCash >= 2000000 ? 'bg-[#7B2FFF] text-white hover:opacity-90' : 'bg-white/5 text-[#4A6080] cursor-not-allowed'}`}>
+                Luncurkan
+              </button>
+            </div>
+          </div>
+
+          {/* Pasar koin */}
+          <p className="text-[#4A6080] text-[11px] uppercase tracking-wider px-1">Pasar Koin</p>
+          {cnLoading ? (
+            <div className="flex justify-center py-8"><Loader2 className="animate-spin text-[#00D4FF]" size={24} /></div>
+          ) : coins.length === 0 ? (
+            <p className="text-[#4A6080] text-sm text-center py-6">Belum ada koin. Jadilah yang pertama meluncurkan!</p>
+          ) : (
+            coins.map(co => {
+              const qty = coinQty[co.id] || '';
+              const q = parseInt(qty) || 0;
+              return (
+                <div key={co.id} className="p-4 rounded-2xl glass border border-white/8">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <p className="text-white font-bold text-sm truncate">{co.name}</p>
+                        <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-[#7B2FFF]/15 text-[#a875ff] border border-[#7B2FFF]/25">{co.symbol}</span>
+                        {co.isMine && <span className="text-[10px] px-1.5 py-0.5 rounded bg-[#FFD700]/10 text-[#FFD700] border border-[#FFD700]/20">Buatanmu</span>}
+                      </div>
+                      <p className="text-[#4A6080] text-[10px] mt-0.5">oleh {co.creatorName} · punyamu: {fmt(co.myAmount)}</p>
+                    </div>
+                    <div className="text-right shrink-0">
+                      <p className="font-mono font-black text-[#00E676]">Rp {fmt(co.price, 2)}</p>
+                      <p className="text-[#4A6080] text-[10px]">tersedia {fmt(co.available)}</p>
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <input type="number" value={qty} onChange={e => setCoinQty(p => ({ ...p, [co.id]: e.target.value }))} placeholder="Jumlah"
+                      className="flex-1 px-3 py-2 rounded-xl bg-white/5 border border-white/10 text-white font-mono text-sm focus:outline-none focus:border-[#00D4FF]/50" />
+                    <button onClick={() => { if (q > 0) doAction(async () => { const r = await gameAPI.buyCoin(co.id, q); setCoins(r.coins); setCoinQty(p => ({ ...p, [co.id]: '' })); return r.state; }, 'Gagal beli'); }}
+                      className="px-3 py-2 rounded-xl bg-[#00E676] text-[#060B18] font-bold text-xs hover:opacity-90">Beli</button>
+                    <button onClick={() => { if (q > 0) doAction(async () => { const r = await gameAPI.sellCoin(co.id, q); setCoins(r.coins); setCoinQty(p => ({ ...p, [co.id]: '' })); return r.state; }, 'Gagal jual'); }}
+                      disabled={co.myAmount <= 0}
+                      className={`px-3 py-2 rounded-xl font-bold text-xs ${co.myAmount > 0 ? 'bg-[#FF4757] text-white hover:opacity-90' : 'bg-white/5 text-[#4A6080] cursor-not-allowed'}`}>Jual</button>
+                  </div>
+                </div>
+              );
+            })
           )}
         </div>
         )}
