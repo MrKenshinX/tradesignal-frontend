@@ -13,6 +13,10 @@ export const metadata: Metadata = {
   alternates: {
     canonical: '/',
   },
+  // ── VERIFIKASI GOOGLE SEARCH CONSOLE ──
+  // Saat kamu sudah punya kode dari Search Console (metode "Tag HTML"),
+  // hapus komentar baris 'verification' di bawah & isi kodenya, lalu deploy:
+  // verification: { google: 'kode-dari-google-di-sini' },
   openGraph: {
     title: 'TradeSignal Pro — Sinyal Trading Real-Time',
     description: 'Sinyal trading otomatis berbasis AI. Saham IDN, Asing & Crypto.',
