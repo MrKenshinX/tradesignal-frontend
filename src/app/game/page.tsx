@@ -39,23 +39,68 @@ function getRank(nw: number) {
 const fmt = (n: number, dec = 0) =>
   isFinite(n) ? n.toLocaleString('id-ID', { maximumFractionDigits: dec, minimumFractionDigits: 0 }) : '—';
 
-// Grafik garis sederhana (SVG) dari riwayat harga
-function Sparkline({ data, up }: { data: number[]; up: boolean }) {
-  if (!data || data.length < 2) return <div className="h-12" />;
-  const w = 260, h = 48, pad = 2;
-  const min = Math.min(...data), max = Math.max(...data);
-  const range = max - min || 1;
-  const pts = data.map((v, i) => {
-    const x = pad + (i / (data.length - 1)) * (w - pad * 2);
-    const y = pad + (1 - (v - min) / range) * (h - pad * 2);
-    return `${x.toFixed(1)},${y.toFixed(1)}`;
-  }).join(' ');
-  const color = up ? '#00E676' : '#FF4757';
-  const lastPt = pts.split(' ').pop()!.split(',');
+type Candle = { t: number; o: number; h: number; l: number; c: number };
+
+// Agregasi candle 1-menit jadi timeframe lebih besar (mis. 5 menit)
+function aggregateCandles(candles: Candle[], group: number): Candle[] {
+  if (group <= 1) return candles;
+  const out: Candle[] = [];
+  for (let i = 0; i < candles.length; i += group) {
+    const slice = candles.slice(i, i + group);
+    if (!slice.length) continue;
+    out.push({
+      t: slice[0].t,
+      o: slice[0].o,
+      h: Math.max(...slice.map(c => c.h)),
+      l: Math.min(...slice.map(c => c.l)),
+      c: slice[slice.length - 1].c,
+    });
+  }
+  return out;
+}
+
+// Grafik candlestick SVG ala TradingView
+function CandleChart({ candles, height = 56, showAxis = false }: { candles: Candle[]; height?: number; showAxis?: boolean }) {
+  if (!candles || candles.length < 2) return <div style={{ height }} />;
+  const w = 300, h = height, padX = showAxis ? 4 : 2, padY = 4;
+  const axisW = showAxis ? 48 : 0;
+  const plotW = w - padX * 2 - axisW;
+  const hi = Math.max(...candles.map(c => c.h));
+  const lo = Math.min(...candles.map(c => c.l));
+  const range = hi - lo || 1;
+  const n = candles.length;
+  const cw = plotW / n;
+  const bodyW = Math.max(1, Math.min(cw * 0.65, 10));
+  const yOf = (v: number) => padY + (1 - (v - lo) / range) * (h - padY * 2);
+  const up = '#00E676', down = '#FF4757';
+
   return (
-    <svg viewBox={`0 0 ${w} ${h}`} className="w-full h-12" preserveAspectRatio="none">
-      <polyline points={pts} fill="none" stroke={color} strokeWidth="1.5" strokeLinejoin="round" strokeLinecap="round" />
-      <circle cx={lastPt[0]} cy={lastPt[1]} r="2" fill={color} />
+    <svg viewBox={`0 0 ${w} ${h}`} className="w-full" style={{ height }} preserveAspectRatio="none">
+      {showAxis && [0, 0.25, 0.5, 0.75, 1].map((f, i) => {
+        const y = padY + f * (h - padY * 2);
+        const val = hi - f * range;
+        return (
+          <g key={i}>
+            <line x1={padX} y1={y} x2={padX + plotW} y2={y} stroke="rgba(255,255,255,0.05)" strokeWidth="0.5" />
+            <text x={padX + plotW + 3} y={y + 3} fill="#4A6080" fontSize="7" fontFamily="monospace">{val >= 1000 ? (val / 1000).toFixed(0) + 'k' : val.toFixed(0)}</text>
+          </g>
+        );
+      })}
+      {candles.map((c, i) => {
+        const x = padX + i * cw + cw / 2;
+        const isUp = c.c >= c.o;
+        const col = isUp ? up : down;
+        const yH = yOf(c.h), yL = yOf(c.l);
+        const yO = yOf(c.o), yC = yOf(c.c);
+        const bodyTop = Math.min(yO, yC);
+        const bodyH = Math.max(1, Math.abs(yC - yO));
+        return (
+          <g key={i}>
+            <line x1={x} y1={yH} x2={x} y2={yL} stroke={col} strokeWidth="0.7" />
+            <rect x={x - bodyW / 2} y={bodyTop} width={bodyW} height={bodyH} fill={col} rx="0.5" />
+          </g>
+        );
+      })}
     </svg>
   );
 }
@@ -90,6 +135,8 @@ function GameContent() {
   const [assets, setAssets] = useState<any[]>([]);
   const [asLoading, setAsLoading] = useState(false);
   const [assetQty, setAssetQty] = useState<Record<number, string>>({});
+  const [detailAsset, setDetailAsset] = useState<any>(null);
+  const [tf, setTf] = useState(1); // timeframe: 1, 5, 15 menit
 
   const stateRef = useRef<GameState | null>(null);
   stateRef.current = state;
@@ -240,6 +287,13 @@ function GameContent() {
     const id = setInterval(loadAssets, 5000);
     return () => clearInterval(id);
   }, [tab, loadAssets]);
+
+  // Sinkronkan modal detail dengan data aset terbaru (grafik ikut bergerak)
+  useEffect(() => {
+    if (!detailAsset) return;
+    const updated = assets.find(a => a.id === detailAsset.id);
+    if (updated) setDetailAsset(updated);
+  }, [assets]); // eslint-disable-line
 
   if (loading) {
     return (
@@ -560,7 +614,7 @@ function GameContent() {
                       <p className={`text-[10px] font-mono ${up ? 'text-[#00E676]' : 'text-[#FF4757]'}`}>{up ? '▲' : '▼'} {Math.abs(a.changePct)}%</p>
                     </div>
                   </div>
-                  <Sparkline data={a.history} up={up} />
+                  <div onClick={() => { setDetailAsset(a); setTf(1); }} className="cursor-pointer rounded-lg overflow-hidden bg-white/2 py-1"><CandleChart candles={a.candles} height={56} /><p className="text-center text-[9px] text-[#4A6080] mt-0.5">ketuk untuk grafik besar</p></div>
                   <div className="flex gap-2 mt-2">
                     <input type="number" value={qty} onChange={e => setAssetQty(p => ({ ...p, [a.id]: e.target.value }))} placeholder="Jumlah lot"
                       className="flex-1 px-3 py-2 rounded-xl bg-white/5 border border-white/10 text-white font-mono text-sm focus:outline-none focus:border-[#00D4FF]/50" />
@@ -760,7 +814,7 @@ function GameContent() {
                       <p className={`text-[10px] font-mono ${up ? 'text-[#00E676]' : 'text-[#FF4757]'}`}>{up ? '▲' : '▼'} {Math.abs(a.changePct)}%</p>
                     </div>
                   </div>
-                  <Sparkline data={a.history} up={up} />
+                  <div onClick={() => { setDetailAsset(a); setTf(1); }} className="cursor-pointer rounded-lg overflow-hidden bg-white/2 py-1"><CandleChart candles={a.candles} height={56} /><p className="text-center text-[9px] text-[#4A6080] mt-0.5">ketuk untuk grafik besar</p></div>
                   <div className="flex gap-2 mt-2">
                     <input type="number" value={qty} onChange={e => setAssetQty(p => ({ ...p, [a.id]: e.target.value }))} placeholder="Jumlah"
                       className="flex-1 px-3 py-2 rounded-xl bg-white/5 border border-white/10 text-white font-mono text-sm focus:outline-none focus:border-[#00D4FF]/50" />
@@ -910,6 +964,79 @@ function GameContent() {
           </a>
         </div>
       </div>
+
+      {/* MODAL DETAIL GRAFIK (ala TradingView) */}
+      {detailAsset && (() => {
+        const a = detailAsset;
+        const up = a.changePct >= 0;
+        const candles = aggregateCandles(a.candles || [], tf);
+        const qty = assetQty[a.id] || '';
+        const q = parseInt(qty) || 0;
+        return (
+          <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/70 backdrop-blur-sm p-0 sm:p-4" onClick={() => setDetailAsset(null)}>
+            <div className="w-full sm:max-w-lg bg-[#0A1128] border border-white/10 rounded-t-3xl sm:rounded-3xl p-5 max-h-[92vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+              <div className="flex items-start justify-between mb-3">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-white font-black text-lg">{a.symbol}</h3>
+                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-white/8 text-[#8BA8C2]">{a.kind === 'coin' ? 'Koin' : 'Saham'}</span>
+                  </div>
+                  <p className="text-[#8BA8C2] text-xs">{a.name}</p>
+                </div>
+                <button onClick={() => setDetailAsset(null)} className="text-[#8BA8C2] hover:text-white text-xl leading-none px-2">✕</button>
+              </div>
+
+              <div className="flex items-baseline gap-3 mb-3">
+                <p className="font-mono font-black text-2xl text-white">Rp {fmt(a.price, 2)}</p>
+                <p className={`font-mono text-sm font-bold ${up ? 'text-[#00E676]' : 'text-[#FF4757]'}`}>{up ? '▲' : '▼'} {Math.abs(a.changePct)}%</p>
+              </div>
+
+              {/* Timeframe */}
+              <div className="flex gap-2 mb-2">
+                {([[1, '1m'], [5, '5m'], [15, '15m']] as const).map(([v, label]) => (
+                  <button key={v} onClick={() => setTf(v)}
+                    className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${tf === v ? 'bg-[#00D4FF] text-[#060B18]' : 'bg-white/5 text-[#8BA8C2] border border-white/8'}`}>
+                    {label}
+                  </button>
+                ))}
+              </div>
+
+              {/* Grafik besar */}
+              <div className="rounded-xl bg-white/2 border border-white/5 p-2 mb-4">
+                <CandleChart candles={candles} height={200} showAxis />
+              </div>
+
+              {/* Info */}
+              <div className="grid grid-cols-3 gap-2 mb-4 text-center">
+                <div className="p-2 rounded-lg bg-white/3">
+                  <p className="text-[#4A6080] text-[10px]">Tertinggi</p>
+                  <p className="font-mono text-white text-xs font-bold">{fmt(Math.max(...candles.map(c => c.h)), 2)}</p>
+                </div>
+                <div className="p-2 rounded-lg bg-white/3">
+                  <p className="text-[#4A6080] text-[10px]">Terendah</p>
+                  <p className="font-mono text-white text-xs font-bold">{fmt(Math.min(...candles.map(c => c.l)), 2)}</p>
+                </div>
+                <div className="p-2 rounded-lg bg-white/3">
+                  <p className="text-[#4A6080] text-[10px]">Punyamu</p>
+                  <p className="font-mono text-white text-xs font-bold">{fmt(a.myAmount)}</p>
+                </div>
+              </div>
+
+              {/* Beli / Jual */}
+              <input type="number" value={qty} onChange={e => setAssetQty(p => ({ ...p, [a.id]: e.target.value }))} placeholder="Jumlah"
+                className="w-full mb-2 px-3 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white font-mono text-sm focus:outline-none focus:border-[#00D4FF]/50" />
+              <div className="grid grid-cols-2 gap-2">
+                <button onClick={() => { if (q > 0) doAction(async () => { const r = await gameAPI.buyAsset(a.id, q); setAssets(r.assets); setAssetQty(p => ({ ...p, [a.id]: '' })); return r.state; }, 'Gagal beli'); }}
+                  className="py-2.5 rounded-xl bg-[#00E676] text-[#060B18] font-bold text-sm hover:opacity-90">Beli</button>
+                <button onClick={() => { if (q > 0) doAction(async () => { const r = await gameAPI.sellAsset(a.id, q); setAssets(r.assets); setAssetQty(p => ({ ...p, [a.id]: '' })); return r.state; }, 'Gagal jual'); }}
+                  disabled={a.myAmount <= 0}
+                  className={`py-2.5 rounded-xl font-bold text-sm ${a.myAmount > 0 ? 'bg-[#FF4757] text-white hover:opacity-90' : 'bg-white/5 text-[#4A6080] cursor-not-allowed'}`}>Jual</button>
+              </div>
+              {q > 0 && <p className="text-[#4A6080] text-[10px] mt-2 text-center">≈ Rp {fmt(q * a.price)} (spread 0.5%)</p>}
+            </div>
+          </div>
+        );
+      })()}
     </div>
   );
 }
