@@ -4,7 +4,7 @@ import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
 import { AuthGuard } from '@/components/auth/AuthGuard';
 import { gameAPI } from '@/lib/api';
-import { Gamepad2, Wallet, TrendingUp, Trophy, ArrowRight, Zap, Loader2, Landmark, Lock, Building2, Medal, Briefcase, LineChart } from 'lucide-react';
+import { Gamepad2, Wallet, TrendingUp, Trophy, ArrowRight, Zap, Loader2, Landmark, Lock, Building2, Medal, Briefcase, LineChart, Sparkles } from 'lucide-react';
 
 interface Business {
   id: string; name: string; emoji: string;
@@ -45,7 +45,7 @@ function GameContent() {
   const [loading, setLoading] = useState(true);
   const [buying, setBuying] = useState<string | null>(null);
   const [error, setError] = useState('');
-  const [tab, setTab] = useState<'bisnis' | 'bank' | 'perusahaan' | 'bursa' | 'peringkat'>('bisnis');
+  const [tab, setTab] = useState<'bisnis' | 'bank' | 'perusahaan' | 'bursa' | 'skill' | 'peringkat'>('bisnis');
   const [bankAmount, setBankAmount] = useState('');
   const [depositAmount, setDepositAmount] = useState('');
   const [depositTerm, setDepositTerm] = useState('d30m');
@@ -58,6 +58,8 @@ function GameContent() {
   const [market, setMarket] = useState<any[]>([]);
   const [mktLoading, setMktLoading] = useState(false);
   const [tradeQty, setTradeQty] = useState<Record<number, string>>({});
+  const [skills, setSkills] = useState<any[]>([]);
+  const [skLoading, setSkLoading] = useState(false);
 
   const stateRef = useRef<GameState | null>(null);
   stateRef.current = state;
@@ -166,6 +168,13 @@ function GameContent() {
     return () => clearInterval(id);
   }, [tab, loadMarket]);
 
+  // Muat skill saat tab skill aktif
+  useEffect(() => {
+    if (tab !== 'skill') return;
+    setSkLoading(true);
+    gameAPI.getSkills().then(setSkills).catch(() => {}).finally(() => setSkLoading(false));
+  }, [tab]);
+
   if (loading) {
     return (
       <div className="min-h-screen bg-[#060B18] pt-24 flex items-center justify-center">
@@ -235,6 +244,10 @@ function GameContent() {
           <button onClick={() => setTab('bursa')}
             className={`flex-1 min-w-[75px] flex items-center justify-center gap-1.5 py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all ${tab === 'bursa' ? 'bg-[#00D4FF] text-[#060B18]' : 'bg-white/5 text-[#8BA8C2] border border-white/8'}`}>
             <LineChart size={14} /> Bursa
+          </button>
+          <button onClick={() => setTab('skill')}
+            className={`flex-1 min-w-[70px] flex items-center justify-center gap-1.5 py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all ${tab === 'skill' ? 'bg-[#00D4FF] text-[#060B18]' : 'bg-white/5 text-[#8BA8C2] border border-white/8'}`}>
+            <Sparkles size={14} /> Skill
           </button>
           <button onClick={() => setTab('peringkat')}
             className={`flex-1 min-w-[90px] flex items-center justify-center gap-1.5 py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all ${tab === 'peringkat' ? 'bg-[#00D4FF] text-[#060B18]' : 'bg-white/5 text-[#8BA8C2] border border-white/8'}`}>
@@ -500,6 +513,40 @@ function GameContent() {
                 </div>
               );
             })
+          )}
+        </div>
+        )}
+
+        {/* TAB: SKILL */}
+        {tab === 'skill' && (
+        <div className="space-y-3">
+          <div className="p-3 rounded-xl bg-[#00D4FF]/8 border border-[#00D4FF]/20 mb-1">
+            <p className="text-[#8BA8C2] text-[11px]">✨ Pengembangan diri — skill permanen yang memperkuat seluruh bisnismu. Bonus berlaku selamanya.</p>
+          </div>
+          {skLoading ? (
+            <div className="flex justify-center py-8"><Loader2 className="animate-spin text-[#00D4FF]" size={24} /></div>
+          ) : (
+            skills.map(sk => (
+              <div key={sk.id} className="flex items-center gap-3 p-4 rounded-2xl glass border border-white/8">
+                <div className="text-2xl shrink-0 w-11 h-11 flex items-center justify-center rounded-xl bg-white/5">{sk.emoji}</div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <p className="text-white font-bold text-sm">{sk.name}</p>
+                    <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-[#00D4FF]/10 text-[#00D4FF] border border-[#00D4FF]/20">Lv.{sk.level}/{sk.maxLevel}</span>
+                  </div>
+                  <p className="text-[#4A6080] text-[11px] mt-0.5">{sk.desc}</p>
+                </div>
+                {sk.nextCost != null ? (
+                  <button onClick={() => doAction(async () => { const r = await gameAPI.buySkill(sk.id); setSkills(r.skills); return r.state; }, 'Gagal beli skill')}
+                    disabled={displayCash < sk.nextCost}
+                    className={`shrink-0 px-3 py-2 rounded-xl font-bold text-xs ${displayCash >= sk.nextCost ? 'bg-[#00E676] text-[#060B18] hover:opacity-90' : 'bg-white/5 text-[#4A6080] cursor-not-allowed'}`}>
+                    Rp {fmt(sk.nextCost)}
+                  </button>
+                ) : (
+                  <span className="shrink-0 text-[10px] text-[#00E676] font-bold">★ MAX</span>
+                )}
+              </div>
+            ))
           )}
         </div>
         )}

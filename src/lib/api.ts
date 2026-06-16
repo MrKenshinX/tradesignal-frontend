@@ -169,6 +169,14 @@ export const gameAPI = {
     const res = await api.post('/api/game/company/dividend', { companyId });
     return res.data;
   },
+  getSkills: async () => {
+    const res = await api.get('/api/game/skills');
+    return res.data.data;
+  },
+  buySkill: async (skillId: string) => {
+    const res = await api.post('/api/game/skill/buy', { skillId });
+    return res.data;
+  },
 };
 
 // =============================================
