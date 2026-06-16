@@ -4,7 +4,7 @@ import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
 import { AuthGuard } from '@/components/auth/AuthGuard';
 import { gameAPI } from '@/lib/api';
-import { Gamepad2, Wallet, TrendingUp, Trophy, ArrowRight, Zap, Loader2, Landmark, Lock, Building2, Medal } from 'lucide-react';
+import { Gamepad2, Wallet, TrendingUp, Trophy, ArrowRight, Zap, Loader2, Landmark, Lock, Building2, Medal, Briefcase } from 'lucide-react';
 
 interface Business {
   id: string; name: string; emoji: string;
@@ -45,13 +45,16 @@ function GameContent() {
   const [loading, setLoading] = useState(true);
   const [buying, setBuying] = useState<string | null>(null);
   const [error, setError] = useState('');
-  const [tab, setTab] = useState<'bisnis' | 'bank' | 'peringkat'>('bisnis');
+  const [tab, setTab] = useState<'bisnis' | 'bank' | 'perusahaan' | 'peringkat'>('bisnis');
   const [bankAmount, setBankAmount] = useState('');
   const [depositAmount, setDepositAmount] = useState('');
   const [depositTerm, setDepositTerm] = useState('d30m');
   const [lbPeriod, setLbPeriod] = useState<'daily' | 'monthly' | 'alltime'>('daily');
   const [lb, setLb] = useState<any>(null);
   const [lbLoading, setLbLoading] = useState(false);
+  const [companies, setCompanies] = useState<any[]>([]);
+  const [coLoading, setCoLoading] = useState(false);
+  const [newCoName, setNewCoName] = useState('');
 
   const stateRef = useRef<GameState | null>(null);
   stateRef.current = state;
@@ -136,6 +139,18 @@ function GameContent() {
     return () => { cancelled = true; };
   }, [tab, lbPeriod]);
 
+  // Muat perusahaan saat tab perusahaan aktif (refresh tiap 5 dtk utk treasury)
+  const loadCompanies = useCallback(() => {
+    gameAPI.getCompanies().then(setCompanies).catch(() => {});
+  }, []);
+  useEffect(() => {
+    if (tab !== 'perusahaan') return;
+    setCoLoading(true);
+    gameAPI.getCompanies().then(setCompanies).catch(() => {}).finally(() => setCoLoading(false));
+    const id = setInterval(loadCompanies, 5000);
+    return () => clearInterval(id);
+  }, [tab, loadCompanies]);
+
   if (loading) {
     return (
       <div className="min-h-screen bg-[#060B18] pt-24 flex items-center justify-center">
@@ -189,18 +204,22 @@ function GameContent() {
         )}
 
         {/* Tab switcher */}
-        <div className="flex gap-2 mb-4">
+        <div className="flex gap-2 mb-4 overflow-x-auto pb-1">
           <button onClick={() => setTab('bisnis')}
-            className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl font-bold text-sm transition-all ${tab === 'bisnis' ? 'bg-[#00D4FF] text-[#060B18]' : 'bg-white/5 text-[#8BA8C2] border border-white/8'}`}>
-            <Building2 size={15} /> Bisnis
+            className={`flex-1 min-w-[80px] flex items-center justify-center gap-1.5 py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all ${tab === 'bisnis' ? 'bg-[#00D4FF] text-[#060B18]' : 'bg-white/5 text-[#8BA8C2] border border-white/8'}`}>
+            <Building2 size={14} /> Bisnis
           </button>
           <button onClick={() => setTab('bank')}
-            className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl font-bold text-sm transition-all ${tab === 'bank' ? 'bg-[#00D4FF] text-[#060B18]' : 'bg-white/5 text-[#8BA8C2] border border-white/8'}`}>
-            <Landmark size={15} /> Bank
+            className={`flex-1 min-w-[80px] flex items-center justify-center gap-1.5 py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all ${tab === 'bank' ? 'bg-[#00D4FF] text-[#060B18]' : 'bg-white/5 text-[#8BA8C2] border border-white/8'}`}>
+            <Landmark size={14} /> Bank
+          </button>
+          <button onClick={() => setTab('perusahaan')}
+            className={`flex-1 min-w-[90px] flex items-center justify-center gap-1.5 py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all ${tab === 'perusahaan' ? 'bg-[#00D4FF] text-[#060B18]' : 'bg-white/5 text-[#8BA8C2] border border-white/8'}`}>
+            <Briefcase size={14} /> Perusahaan
           </button>
           <button onClick={() => setTab('peringkat')}
-            className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl font-bold text-sm transition-all ${tab === 'peringkat' ? 'bg-[#00D4FF] text-[#060B18]' : 'bg-white/5 text-[#8BA8C2] border border-white/8'}`}>
-            <Medal size={15} /> Peringkat
+            className={`flex-1 min-w-[90px] flex items-center justify-center gap-1.5 py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all ${tab === 'peringkat' ? 'bg-[#00D4FF] text-[#060B18]' : 'bg-white/5 text-[#8BA8C2] border border-white/8'}`}>
+            <Medal size={14} /> Peringkat
           </button>
         </div>
 
@@ -323,6 +342,67 @@ function GameContent() {
               <p className="text-[#4A6080] text-xs text-center py-2">Belum ada deposito aktif.</p>
             )}
           </div>
+        </div>
+        )}
+
+        {/* TAB: PERUSAHAAN */}
+        {tab === 'perusahaan' && (
+        <div className="space-y-4">
+          {/* Dirikan perusahaan */}
+          <div className="p-5 rounded-2xl glass border border-white/8">
+            <div className="flex items-center gap-2 mb-2">
+              <Briefcase size={18} className="text-[#7B2FFF]" />
+              <h3 className="text-white font-bold">Dirikan Perusahaan</h3>
+            </div>
+            <p className="text-[#4A6080] text-xs mb-3">Modal Rp 1.000.000. Perusahaan menghasilkan revenue/detik ke kasnya, bisa di-upgrade & nanti IPO.</p>
+            <div className="flex gap-2">
+              <input value={newCoName} onChange={e => setNewCoName(e.target.value)} placeholder="Nama perusahaan (mis. PT Maju Jaya)" maxLength={40}
+                className="flex-1 px-3 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-sm focus:outline-none focus:border-[#7B2FFF]/50" />
+              <button onClick={() => { if (newCoName.trim().length >= 2) { doAction(async () => { await gameAPI.foundCompany(newCoName.trim()); loadCompanies(); return await gameAPI.getState(); }, 'Gagal mendirikan'); setNewCoName(''); } }}
+                disabled={displayCash < 1000000}
+                className={`px-4 py-2.5 rounded-xl font-bold text-sm ${displayCash >= 1000000 ? 'bg-[#7B2FFF] text-white hover:opacity-90' : 'bg-white/5 text-[#4A6080] cursor-not-allowed'}`}>
+                Dirikan
+              </button>
+            </div>
+          </div>
+
+          {/* Daftar perusahaanku */}
+          {coLoading ? (
+            <div className="flex justify-center py-8"><Loader2 className="animate-spin text-[#00D4FF]" size={24} /></div>
+          ) : companies.length === 0 ? (
+            <p className="text-[#4A6080] text-sm text-center py-6">Belum punya perusahaan. Dirikan yang pertama!</p>
+          ) : (
+            <div className="space-y-3">
+              {companies.map(co => (
+                <div key={co.id} className="p-5 rounded-2xl glass border border-white/8">
+                  <div className="flex items-center justify-between mb-3">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <p className="text-white font-bold">{co.name}</p>
+                        <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-[#FFD700]/10 text-[#FFD700] border border-[#FFD700]/20">Lv.{co.level}</span>
+                        {co.isPublic && <span className="text-[10px] px-1.5 py-0.5 rounded bg-[#00E676]/10 text-[#00E676] border border-[#00E676]/20">PUBLIC</span>}
+                      </div>
+                      <p className="text-[#00E676] text-xs font-mono mt-0.5">+Rp {fmt(co.revenuePerSec)}/dtk</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-[#4A6080] text-[10px]">Kas Perusahaan</p>
+                      <p className="font-mono font-bold text-white">Rp {fmt(co.treasury)}</p>
+                    </div>
+                  </div>
+                  {co.upgradeCost != null ? (
+                    <button onClick={() => doAction(async () => { await gameAPI.upgradeCompany(co.id); loadCompanies(); return await gameAPI.getState(); }, 'Gagal upgrade')}
+                      disabled={co.treasury < co.upgradeCost}
+                      className={`w-full py-2 rounded-xl font-bold text-xs ${co.treasury >= co.upgradeCost ? 'bg-[#FFD700]/15 text-[#FFD700] border border-[#FFD700]/30 hover:bg-[#FFD700]/25' : 'bg-white/3 text-[#4A6080] border border-white/8 cursor-not-allowed'}`}>
+                      ⬆ Upgrade Lv.{co.level + 1} → +Rp {fmt(co.nextRevenue)}/dtk · biaya Rp {fmt(co.upgradeCost)} (dari kas)
+                    </button>
+                  ) : (
+                    <p className="text-center text-[10px] text-[#00E676]">★ Level Maksimal</p>
+                  )}
+                  <p className="text-[#4A6080] text-[10px] text-center mt-2">IPO saham akan hadir di update berikutnya.</p>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
         )}
 

@@ -137,6 +137,18 @@ export const gameAPI = {
     const res = await api.get(`/api/game/leaderboard?period=${period}`);
     return res.data.data;
   },
+  getCompanies: async () => {
+    const res = await api.get('/api/game/companies');
+    return res.data.data;
+  },
+  foundCompany: async (name: string) => {
+    const res = await api.post('/api/game/company/found', { name });
+    return res.data.data;
+  },
+  upgradeCompany: async (companyId: number) => {
+    const res = await api.post('/api/game/company/upgrade', { companyId });
+    return res.data.data;
+  },
 };
 
 // =============================================
