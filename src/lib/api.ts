@@ -205,6 +205,18 @@ export const gameAPI = {
     const res = await api.post('/api/game/coin/sell', { coinId, qty });
     return res.data;
   },
+  getMarketAssets: async () => {
+    const res = await api.get('/api/game/market-assets');
+    return res.data.data;
+  },
+  buyAsset: async (assetId: number, qty: number) => {
+    const res = await api.post('/api/game/market-asset/buy', { assetId, qty });
+    return res.data;
+  },
+  sellAsset: async (assetId: number, qty: number) => {
+    const res = await api.post('/api/game/market-asset/sell', { assetId, qty });
+    return res.data;
+  },
 };
 
 // =============================================

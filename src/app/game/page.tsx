@@ -39,6 +39,27 @@ function getRank(nw: number) {
 const fmt = (n: number, dec = 0) =>
   isFinite(n) ? n.toLocaleString('id-ID', { maximumFractionDigits: dec, minimumFractionDigits: 0 }) : '—';
 
+// Grafik garis sederhana (SVG) dari riwayat harga
+function Sparkline({ data, up }: { data: number[]; up: boolean }) {
+  if (!data || data.length < 2) return <div className="h-12" />;
+  const w = 260, h = 48, pad = 2;
+  const min = Math.min(...data), max = Math.max(...data);
+  const range = max - min || 1;
+  const pts = data.map((v, i) => {
+    const x = pad + (i / (data.length - 1)) * (w - pad * 2);
+    const y = pad + (1 - (v - min) / range) * (h - pad * 2);
+    return `${x.toFixed(1)},${y.toFixed(1)}`;
+  }).join(' ');
+  const color = up ? '#00E676' : '#FF4757';
+  const lastPt = pts.split(' ').pop()!.split(',');
+  return (
+    <svg viewBox={`0 0 ${w} ${h}`} className="w-full h-12" preserveAspectRatio="none">
+      <polyline points={pts} fill="none" stroke={color} strokeWidth="1.5" strokeLinejoin="round" strokeLinecap="round" />
+      <circle cx={lastPt[0]} cy={lastPt[1]} r="2" fill={color} />
+    </svg>
+  );
+}
+
 function GameContent() {
   const [state, setState] = useState<GameState | null>(null);
   const [displayCash, setDisplayCash] = useState(0);
@@ -66,6 +87,9 @@ function GameContent() {
   const [cnLoading, setCnLoading] = useState(false);
   const [coinQty, setCoinQty] = useState<Record<number, string>>({});
   const [newCoin, setNewCoin] = useState({ name: '', symbol: '', p0: '100' });
+  const [assets, setAssets] = useState<any[]>([]);
+  const [asLoading, setAsLoading] = useState(false);
+  const [assetQty, setAssetQty] = useState<Record<number, string>>({});
 
   const stateRef = useRef<GameState | null>(null);
   stateRef.current = state;
@@ -204,6 +228,18 @@ function GameContent() {
     const id = setInterval(loadCoins, 5000);
     return () => clearInterval(id);
   }, [tab, loadCoins]);
+
+  // Muat aset pasar bawaan saat tab bursa/koin aktif (refresh harga+grafik tiap 5dtk)
+  const loadAssets = useCallback(() => {
+    gameAPI.getMarketAssets().then(setAssets).catch(() => {});
+  }, []);
+  useEffect(() => {
+    if (tab !== 'bursa' && tab !== 'koin') return;
+    setAsLoading(true);
+    gameAPI.getMarketAssets().then(setAssets).catch(() => {}).finally(() => setAsLoading(false));
+    const id = setInterval(loadAssets, 5000);
+    return () => clearInterval(id);
+  }, [tab, loadAssets]);
 
   if (loading) {
     return (
@@ -500,8 +536,48 @@ function GameContent() {
         {/* TAB: BURSA SAHAM */}
         {tab === 'bursa' && (
         <div className="space-y-3">
-          <div className="p-3 rounded-xl bg-[#7B2FFF]/8 border border-[#7B2FFF]/20 mb-1">
-            <p className="text-[#8BA8C2] text-[11px]">📊 Beli saham perusahaan publik. Harga naik saat dibeli, turun saat dijual (market-maker). Pegang saham untuk dapat dividen nanti.</p>
+          {/* Saham bawaan (dengan grafik) */}
+          <p className="text-[#4A6080] text-[11px] uppercase tracking-wider px-1">📈 Saham Pasar (harga bergerak realtime)</p>
+          {asLoading && assets.length === 0 ? (
+            <div className="flex justify-center py-6"><Loader2 className="animate-spin text-[#00D4FF]" size={22} /></div>
+          ) : (
+            assets.filter(a => a.kind === 'stock').map(a => {
+              const qty = assetQty[a.id] || '';
+              const q = parseInt(qty) || 0;
+              const up = a.changePct >= 0;
+              return (
+                <div key={a.id} className="p-4 rounded-2xl glass border border-white/8">
+                  <div className="flex items-center justify-between mb-1">
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2">
+                        <p className="text-white font-bold text-sm truncate">{a.name}</p>
+                        <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-white/8 text-[#8BA8C2]">{a.symbol}</span>
+                      </div>
+                      {a.myAmount > 0 && <p className="text-[#4A6080] text-[10px] mt-0.5">punyamu: {fmt(a.myAmount)} (≈ Rp {fmt(a.myValue)})</p>}
+                    </div>
+                    <div className="text-right shrink-0">
+                      <p className="font-mono font-black text-white text-sm">Rp {fmt(a.price, 2)}</p>
+                      <p className={`text-[10px] font-mono ${up ? 'text-[#00E676]' : 'text-[#FF4757]'}`}>{up ? '▲' : '▼'} {Math.abs(a.changePct)}%</p>
+                    </div>
+                  </div>
+                  <Sparkline data={a.history} up={up} />
+                  <div className="flex gap-2 mt-2">
+                    <input type="number" value={qty} onChange={e => setAssetQty(p => ({ ...p, [a.id]: e.target.value }))} placeholder="Jumlah lot"
+                      className="flex-1 px-3 py-2 rounded-xl bg-white/5 border border-white/10 text-white font-mono text-sm focus:outline-none focus:border-[#00D4FF]/50" />
+                    <button onClick={() => { if (q > 0) doAction(async () => { const r = await gameAPI.buyAsset(a.id, q); setAssets(r.assets); setAssetQty(p => ({ ...p, [a.id]: '' })); return r.state; }, 'Gagal beli'); }}
+                      className="px-3 py-2 rounded-xl bg-[#00E676] text-[#060B18] font-bold text-xs hover:opacity-90">Beli</button>
+                    <button onClick={() => { if (q > 0) doAction(async () => { const r = await gameAPI.sellAsset(a.id, q); setAssets(r.assets); setAssetQty(p => ({ ...p, [a.id]: '' })); return r.state; }, 'Gagal jual'); }}
+                      disabled={a.myAmount <= 0}
+                      className={`px-3 py-2 rounded-xl font-bold text-xs ${a.myAmount > 0 ? 'bg-[#FF4757] text-white hover:opacity-90' : 'bg-white/5 text-[#4A6080] cursor-not-allowed'}`}>Jual</button>
+                  </div>
+                </div>
+              );
+            })
+          )}
+
+          {/* Saham perusahaan pemain (market-maker) */}
+          <div className="p-3 rounded-xl bg-[#7B2FFF]/8 border border-[#7B2FFF]/20 mb-1 mt-4">
+            <p className="text-[#8BA8C2] text-[11px]">🏢 Saham perusahaan pemain (IPO). Harga naik saat dibeli, turun saat dijual.</p>
           </div>
           {mktLoading ? (
             <div className="flex justify-center py-8"><Loader2 className="animate-spin text-[#00D4FF]" size={24} /></div>
@@ -660,8 +736,47 @@ function GameContent() {
         {/* TAB: KOIN (launchpad) */}
         {tab === 'koin' && (
         <div className="space-y-3">
+          {/* Koin bawaan (dengan grafik) */}
+          <p className="text-[#4A6080] text-[11px] uppercase tracking-wider px-1">🪙 Koin Pasar (harga bergerak realtime)</p>
+          {asLoading && assets.length === 0 ? (
+            <div className="flex justify-center py-6"><Loader2 className="animate-spin text-[#00D4FF]" size={22} /></div>
+          ) : (
+            assets.filter(a => a.kind === 'coin').map(a => {
+              const qty = assetQty[a.id] || '';
+              const q = parseInt(qty) || 0;
+              const up = a.changePct >= 0;
+              return (
+                <div key={a.id} className="p-4 rounded-2xl glass border border-white/8">
+                  <div className="flex items-center justify-between mb-1">
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2">
+                        <p className="text-white font-bold text-sm truncate">{a.name}</p>
+                        <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-[#FFD700]/10 text-[#FFD700] border border-[#FFD700]/20">{a.symbol}</span>
+                      </div>
+                      {a.myAmount > 0 && <p className="text-[#4A6080] text-[10px] mt-0.5">punyamu: {fmt(a.myAmount)} (≈ Rp {fmt(a.myValue)})</p>}
+                    </div>
+                    <div className="text-right shrink-0">
+                      <p className="font-mono font-black text-white text-sm">Rp {fmt(a.price, 2)}</p>
+                      <p className={`text-[10px] font-mono ${up ? 'text-[#00E676]' : 'text-[#FF4757]'}`}>{up ? '▲' : '▼'} {Math.abs(a.changePct)}%</p>
+                    </div>
+                  </div>
+                  <Sparkline data={a.history} up={up} />
+                  <div className="flex gap-2 mt-2">
+                    <input type="number" value={qty} onChange={e => setAssetQty(p => ({ ...p, [a.id]: e.target.value }))} placeholder="Jumlah"
+                      className="flex-1 px-3 py-2 rounded-xl bg-white/5 border border-white/10 text-white font-mono text-sm focus:outline-none focus:border-[#00D4FF]/50" />
+                    <button onClick={() => { if (q > 0) doAction(async () => { const r = await gameAPI.buyAsset(a.id, q); setAssets(r.assets); setAssetQty(p => ({ ...p, [a.id]: '' })); return r.state; }, 'Gagal beli'); }}
+                      className="px-3 py-2 rounded-xl bg-[#00E676] text-[#060B18] font-bold text-xs hover:opacity-90">Beli</button>
+                    <button onClick={() => { if (q > 0) doAction(async () => { const r = await gameAPI.sellAsset(a.id, q); setAssets(r.assets); setAssetQty(p => ({ ...p, [a.id]: '' })); return r.state; }, 'Gagal jual'); }}
+                      disabled={a.myAmount <= 0}
+                      className={`px-3 py-2 rounded-xl font-bold text-xs ${a.myAmount > 0 ? 'bg-[#FF4757] text-white hover:opacity-90' : 'bg-white/5 text-[#4A6080] cursor-not-allowed'}`}>Jual</button>
+                  </div>
+                </div>
+              );
+            })
+          )}
+
           {/* Bikin koin */}
-          <div className="p-5 rounded-2xl glass border border-[#7B2FFF]/20">
+          <div className="p-5 rounded-2xl glass border border-[#7B2FFF]/20 mt-4">
             <div className="flex items-center gap-2 mb-2">
               <Coins size={18} className="text-[#7B2FFF]" />
               <h3 className="text-white font-bold">Bikin Crypto Sendiri</h3>
