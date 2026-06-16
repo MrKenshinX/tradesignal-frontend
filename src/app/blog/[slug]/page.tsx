@@ -233,6 +233,28 @@ export default function BlogArticlePage({ params }: { params: { slug: string } }
           }),
         }}
       />
+      {/* HowTo schema untuk artikel tutorial berlangkah (section diawali "Langkah") */}
+      {article.category === 'Tutorial' && article.sections.some(s => /^Langkah/i.test(s.h)) && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              '@context': 'https://schema.org',
+              '@type': 'HowTo',
+              name: article.title,
+              description: article.intro,
+              step: article.sections
+                .filter(s => /^Langkah/i.test(s.h))
+                .map((s, i) => ({
+                  '@type': 'HowToStep',
+                  position: i + 1,
+                  name: s.h,
+                  text: s.p,
+                })),
+            }),
+          }}
+        />
+      )}
       <Navbar />
       <div className="min-h-screen bg-[#060B18] pt-24 pb-16">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">

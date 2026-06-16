@@ -77,6 +77,27 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             }),
           }}
         />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              '@context': 'https://schema.org',
+              '@type': 'SoftwareApplication',
+              name: 'TradeSignal Pro',
+              applicationCategory: 'FinanceApplication',
+              operatingSystem: 'Web',
+              url: 'https://tradesignalpro.web.id',
+              description: 'Platform sinyal trading otomatis real-time untuk saham Indonesia, saham asing, dan crypto. Berbasis analisis teknikal multi-indikator (RSI, MACD, Bollinger Bands, EMA) dengan Auto SL/TP.',
+              inLanguage: 'id-ID',
+              offers: [
+                { '@type': 'Offer', name: 'Gratis', price: '0', priceCurrency: 'IDR', description: 'Akses sinyal terbatas' },
+                { '@type': 'Offer', name: 'Premium', price: '100000', priceCurrency: 'IDR', description: 'Sinyal unlimited per market /bulan' },
+                { '@type': 'Offer', name: 'VIP All-Access', price: '250000', priceCurrency: 'IDR', description: 'Semua market + fitur premium /bulan' },
+              ],
+              featureList: ['Sinyal trading real-time', 'Analisis RSI MACD Bollinger Bands EMA', 'Auto Stop Loss & Take Profit', 'Portfolio tracker', 'Notifikasi real-time'],
+            }),
+          }}
+        />
       </head>
       <body className="bg-[#060B18] text-[#E8F4FD]">
         {children}
