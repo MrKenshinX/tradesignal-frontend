@@ -149,6 +149,10 @@ export const gameAPI = {
     const res = await api.post('/api/game/company/upgrade', { companyId });
     return res.data.data;
   },
+  ipoCompany: async (companyId: number) => {
+    const res = await api.post('/api/game/company/ipo', { companyId });
+    return res.data.data;
+  },
 };
 
 // =============================================

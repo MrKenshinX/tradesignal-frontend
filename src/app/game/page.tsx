@@ -398,7 +398,21 @@ function GameContent() {
                   ) : (
                     <p className="text-center text-[10px] text-[#00E676]">★ Level Maksimal</p>
                   )}
-                  <p className="text-[#4A6080] text-[10px] text-center mt-2">IPO saham akan hadir di update berikutnya.</p>
+
+                  {/* IPO / status publik */}
+                  {co.isPublic ? (
+                    <div className="mt-2 p-2.5 rounded-xl bg-[#00E676]/6 border border-[#00E676]/15 flex items-center justify-between">
+                      <span className="text-[#8BA8C2] text-[11px]">Harga saham</span>
+                      <span className="font-mono text-[#00E676] text-sm font-bold">Rp {fmt(co.sharePrice, 2)}</span>
+                    </div>
+                  ) : co.canIpo ? (
+                    <button onClick={() => doAction(async () => { await gameAPI.ipoCompany(co.id); loadCompanies(); return await gameAPI.getState(); }, 'Gagal IPO')}
+                      className="mt-2 w-full py-2 rounded-xl font-bold text-xs bg-[#7B2FFF] text-white hover:opacity-90">
+                      📈 IPO Sekarang (≈ Rp {fmt(co.estIpoPrice)}/saham, kamu dapat 5.000 saham)
+                    </button>
+                  ) : (
+                    <p className="text-center text-[10px] text-[#4A6080] mt-2">Capai Level {co.ipoMinLevel} untuk bisa IPO saham.</p>
+                  )}
                 </div>
               ))}
             </div>
