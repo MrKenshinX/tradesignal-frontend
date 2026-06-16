@@ -4,7 +4,7 @@ import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
 import { AuthGuard } from '@/components/auth/AuthGuard';
 import { gameAPI } from '@/lib/api';
-import { Gamepad2, Wallet, TrendingUp, Trophy, ArrowRight, Zap, Loader2, Landmark, Lock, Building2, Medal, Briefcase, LineChart, Sparkles } from 'lucide-react';
+import { Gamepad2, Wallet, TrendingUp, Trophy, ArrowRight, Zap, Loader2, Landmark, Lock, Building2, Medal, Briefcase, LineChart, Sparkles, Cpu } from 'lucide-react';
 
 interface Business {
   id: string; name: string; emoji: string;
@@ -45,7 +45,7 @@ function GameContent() {
   const [loading, setLoading] = useState(true);
   const [buying, setBuying] = useState<string | null>(null);
   const [error, setError] = useState('');
-  const [tab, setTab] = useState<'bisnis' | 'bank' | 'perusahaan' | 'bursa' | 'skill' | 'peringkat'>('bisnis');
+  const [tab, setTab] = useState<'bisnis' | 'bank' | 'perusahaan' | 'bursa' | 'skill' | 'mining' | 'peringkat'>('bisnis');
   const [bankAmount, setBankAmount] = useState('');
   const [depositAmount, setDepositAmount] = useState('');
   const [depositTerm, setDepositTerm] = useState('d30m');
@@ -60,6 +60,8 @@ function GameContent() {
   const [tradeQty, setTradeQty] = useState<Record<number, string>>({});
   const [skills, setSkills] = useState<any[]>([]);
   const [skLoading, setSkLoading] = useState(false);
+  const [mining, setMining] = useState<any>(null);
+  const [mnLoading, setMnLoading] = useState(false);
 
   const stateRef = useRef<GameState | null>(null);
   stateRef.current = state;
@@ -175,6 +177,18 @@ function GameContent() {
     gameAPI.getSkills().then(setSkills).catch(() => {}).finally(() => setSkLoading(false));
   }, [tab]);
 
+  // Muat mining saat tab mining aktif (refresh tiap 5dtk utk harga & saldo)
+  const loadMining = useCallback(() => {
+    gameAPI.getMining().then(setMining).catch(() => {});
+  }, []);
+  useEffect(() => {
+    if (tab !== 'mining') return;
+    setMnLoading(true);
+    gameAPI.getMining().then(setMining).catch(() => {}).finally(() => setMnLoading(false));
+    const id = setInterval(loadMining, 5000);
+    return () => clearInterval(id);
+  }, [tab, loadMining]);
+
   if (loading) {
     return (
       <div className="min-h-screen bg-[#060B18] pt-24 flex items-center justify-center">
@@ -248,6 +262,10 @@ function GameContent() {
           <button onClick={() => setTab('skill')}
             className={`flex-1 min-w-[70px] flex items-center justify-center gap-1.5 py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all ${tab === 'skill' ? 'bg-[#00D4FF] text-[#060B18]' : 'bg-white/5 text-[#8BA8C2] border border-white/8'}`}>
             <Sparkles size={14} /> Skill
+          </button>
+          <button onClick={() => setTab('mining')}
+            className={`flex-1 min-w-[80px] flex items-center justify-center gap-1.5 py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all ${tab === 'mining' ? 'bg-[#00D4FF] text-[#060B18]' : 'bg-white/5 text-[#8BA8C2] border border-white/8'}`}>
+            <Cpu size={14} /> Mining
           </button>
           <button onClick={() => setTab('peringkat')}
             className={`flex-1 min-w-[90px] flex items-center justify-center gap-1.5 py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all ${tab === 'peringkat' ? 'bg-[#00D4FF] text-[#060B18]' : 'bg-white/5 text-[#8BA8C2] border border-white/8'}`}>
@@ -547,6 +565,74 @@ function GameContent() {
                 )}
               </div>
             ))
+          )}
+        </div>
+        )}
+
+        {/* TAB: MINING */}
+        {tab === 'mining' && (
+        <div className="space-y-3">
+          {mnLoading || !mining ? (
+            <div className="flex justify-center py-8"><Loader2 className="animate-spin text-[#00D4FF]" size={24} /></div>
+          ) : (
+            <>
+              {/* Panel TSC */}
+              <div className="p-5 rounded-2xl glass border border-[#FFD700]/20">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    <Cpu size={18} className="text-[#FFD700]" />
+                    <h3 className="text-white font-bold">TradeSignal Coin (TSC)</h3>
+                  </div>
+                  <div className="text-right">
+                    <p className="font-mono font-black text-[#FFD700]">Rp {fmt(mining.price, 2)}</p>
+                    <p className="text-[#4A6080] text-[10px]">harga pasar (fluktuatif)</p>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-3 mb-3">
+                  <div className="p-3 rounded-xl bg-white/3">
+                    <p className="text-[#4A6080] text-[10px]">TSC Ditambang</p>
+                    <p className="font-mono font-bold text-white text-sm">{fmt(mining.minedBalance, 4)}</p>
+                    <p className="text-[#00E676] text-[10px]">≈ Rp {fmt(mining.minedValue)}</p>
+                  </div>
+                  <div className="p-3 rounded-xl bg-white/3">
+                    <p className="text-[#4A6080] text-[10px]">Hashrate</p>
+                    <p className="font-mono font-bold text-white text-sm">{fmt(mining.hashrate)} H/s</p>
+                    <p className="text-[#8BA8C2] text-[10px]">{fmt(mining.minePerSec, 4)} TSC/dtk</p>
+                  </div>
+                </div>
+                <button onClick={() => { if (mining.minedBalance > 0) doAction(async () => { const r = await gameAPI.sellCrypto(null); setMining(r.mining); return r.state; }, 'Gagal jual'); }}
+                  disabled={mining.minedBalance <= 0}
+                  className={`w-full py-2.5 rounded-xl font-bold text-sm ${mining.minedBalance > 0 ? 'bg-[#FFD700] text-[#060B18] hover:opacity-90' : 'bg-white/5 text-[#4A6080] cursor-not-allowed'}`}>
+                  💰 Jual Semua TSC (≈ Rp {fmt(mining.minedValue)})
+                </button>
+              </div>
+
+              {/* Daftar rig */}
+              <p className="text-[#4A6080] text-[11px] uppercase tracking-wider px-1">Perangkat Mining</p>
+              {mining.rigs.map((r: any) => {
+                const affordable = displayCash >= r.nextCost;
+                return (
+                  <div key={r.id} className="flex items-center gap-3 p-4 rounded-2xl glass border border-white/8">
+                    <div className="text-2xl shrink-0 w-11 h-11 flex items-center justify-center rounded-xl bg-white/5">{r.emoji}</div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <p className="text-white font-bold text-sm">{r.name}</p>
+                        {r.count > 0 && <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-[#FFD700]/10 text-[#FFD700] border border-[#FFD700]/20">×{fmt(r.count)}</span>}
+                      </div>
+                      <p className="text-[#4A6080] text-[11px] mt-0.5">
+                        {fmt(r.hashrate)} H/s per unit
+                        {r.hashTotal > 0 && <span className="text-[#00E676]"> · total {fmt(r.hashTotal)} H/s</span>}
+                      </p>
+                    </div>
+                    <button onClick={() => doAction(async () => { const res = await gameAPI.buyRig(r.id); setMining(res.mining); return res.state; }, 'Gagal beli')}
+                      disabled={!affordable}
+                      className={`shrink-0 px-3 py-2.5 rounded-xl font-bold text-xs ${affordable ? 'bg-[#00E676] text-[#060B18] hover:opacity-90' : 'bg-white/5 text-[#4A6080] cursor-not-allowed'}`}>
+                      <span className="font-mono">Rp {fmt(r.nextCost)}</span>
+                    </button>
+                  </div>
+                );
+              })}
+            </>
           )}
         </div>
         )}

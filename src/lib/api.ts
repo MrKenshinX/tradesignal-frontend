@@ -177,6 +177,18 @@ export const gameAPI = {
     const res = await api.post('/api/game/skill/buy', { skillId });
     return res.data;
   },
+  getMining: async () => {
+    const res = await api.get('/api/game/mining');
+    return res.data.data;
+  },
+  buyRig: async (rigId: string) => {
+    const res = await api.post('/api/game/mining/buy', { rigId });
+    return res.data;
+  },
+  sellCrypto: async (amount: number | null) => {
+    const res = await api.post('/api/game/mining/sell', { amount });
+    return res.data;
+  },
 };
 
 // =============================================
