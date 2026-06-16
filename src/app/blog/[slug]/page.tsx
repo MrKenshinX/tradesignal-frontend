@@ -273,12 +273,16 @@ export default function BlogArticlePage({ params }: { params: { slug: string } }
             </Link>
           </div>
 
-          {/* Artikel Lainnya — internal linking untuk SEO */}
+          {/* Artikel Lainnya — internal linking untuk SEO (prioritas kategori sama) */}
           {(() => {
-            const others = Object.entries(ARTICLES).filter(([slug]) => slug !== params.slug).slice(0, 3);
+            const current = ARTICLES[params.slug];
+            const entries = Object.entries(ARTICLES).filter(([slug]) => slug !== params.slug);
+            // Dahulukan artikel berkategori sama (lebih relevan secara topik untuk SEO)
+            const sameCategory = entries.filter(([, a]) => a.category === current?.category);
+            const others = [...sameCategory, ...entries.filter(([, a]) => a.category !== current?.category)].slice(0, 3);
             return (
               <div className="mt-12">
-                <h3 className="text-white font-bold text-lg mb-4">Artikel Lainnya</h3>
+                <h3 className="text-white font-bold text-lg mb-4">Artikel Terkait</h3>
                 <div className="grid gap-3">
                   {others.map(([slug, a]) => (
                     <Link key={slug} href={`/blog/${slug}/`}

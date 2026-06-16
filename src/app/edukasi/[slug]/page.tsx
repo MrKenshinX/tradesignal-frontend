@@ -123,6 +123,38 @@ export default function EdukasiModulePage({ params }: { params: { slug: string }
 
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            '@context': 'https://schema.org',
+            '@type': 'Article',
+            headline: eduModule.title,
+            description: eduModule.intro,
+            author: { '@type': 'Organization', name: 'TradeSignal Pro' },
+            publisher: {
+              '@type': 'Organization',
+              name: 'TradeSignal Pro',
+              logo: { '@type': 'ImageObject', url: 'https://tradesignalpro.web.id/icon-512.png' },
+            },
+            mainEntityOfPage: `https://tradesignalpro.web.id/edukasi/${params.slug}/`,
+          }),
+        }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            '@context': 'https://schema.org',
+            '@type': 'BreadcrumbList',
+            itemListElement: [
+              { '@type': 'ListItem', position: 1, name: 'Beranda', item: 'https://tradesignalpro.web.id/' },
+              { '@type': 'ListItem', position: 2, name: 'Edukasi', item: 'https://tradesignalpro.web.id/edukasi/' },
+              { '@type': 'ListItem', position: 3, name: eduModule.title, item: `https://tradesignalpro.web.id/edukasi/${params.slug}/` },
+            ],
+          }),
+        }}
+      />
       <Navbar />
       <div className="min-h-screen bg-[#060B18] pt-24 pb-16">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -170,6 +202,28 @@ export default function EdukasiModulePage({ params }: { params: { slug: string }
               </Link>
             </div>
           </div>
+
+          {/* Modul Terkait — internal linking untuk SEO */}
+          {(() => {
+            const others = Object.entries(MODULES).filter(([slug]) => slug !== params.slug).slice(0, 3);
+            return (
+              <div className="mt-12">
+                <h3 className="text-white font-bold text-lg mb-4">Modul Terkait</h3>
+                <div className="grid gap-3">
+                  {others.map(([slug, m]) => (
+                    <Link key={slug} href={`/edukasi/${slug}/`}
+                      className="flex items-center justify-between gap-4 p-4 rounded-xl glass border border-white/8 hover:border-[#00D4FF]/30 transition-colors group">
+                      <div>
+                        <span className="text-[9px] font-semibold px-2 py-0.5 rounded-full bg-[#00D4FF]/10 text-[#00D4FF] border border-[#00D4FF]/20">{m.level}</span>
+                        <p className="text-white text-sm font-semibold mt-1.5 group-hover:text-[#00D4FF] transition-colors">{m.title}</p>
+                      </div>
+                      <ArrowLeft size={16} className="text-[#4A6080] rotate-180 shrink-0" />
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            );
+          })()}
         </div>
       </div>
       <Footer />
