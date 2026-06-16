@@ -113,6 +113,10 @@ export const gameAPI = {
     const res = await api.post('/api/game/business/buy', { businessId });
     return res.data.data;
   },
+  upgradeBusiness: async (businessId: string) => {
+    const res = await api.post('/api/game/business/upgrade', { businessId });
+    return res.data.data;
+  },
   bankDeposit: async (amount: number) => {
     const res = await api.post('/api/game/bank/deposit', { amount });
     return res.data.data;

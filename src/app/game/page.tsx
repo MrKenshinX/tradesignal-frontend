@@ -9,6 +9,7 @@ import { Gamepad2, Wallet, TrendingUp, Trophy, ArrowRight, Zap, Loader2, Landmar
 interface Business {
   id: string; name: string; emoji: string;
   income: number; count: number; nextCost: number; incomeTotal: number;
+  level: number; multiplier: number; upgradeCost: number | null; maxLevel: number;
 }
 interface Deposit {
   id: number; amount: number; rate: number; termLabel: string;
@@ -213,14 +214,28 @@ function GameContent() {
               <div key={b.id} className={`flex items-center gap-3 p-4 rounded-2xl glass border transition-all ${owned ? 'border-white/10' : 'border-white/5 opacity-90'}`}>
                 <div className="text-3xl shrink-0 w-12 h-12 flex items-center justify-center rounded-xl bg-white/5">{b.emoji}</div>
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 flex-wrap">
                     <p className="text-white font-bold text-sm">{b.name}</p>
                     {b.count > 0 && <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-[#00D4FF]/10 text-[#00D4FF] border border-[#00D4FF]/20">×{fmt(b.count)}</span>}
+                    {b.level > 1 && <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-[#FFD700]/10 text-[#FFD700] border border-[#FFD700]/20">Lv.{b.level}</span>}
                   </div>
                   <p className="text-[#4A6080] text-[11px] mt-0.5">
                     +Rp {fmt(b.income)}/dtk per unit
                     {b.incomeTotal > 0 && <span className="text-[#00E676]"> · total +Rp {fmt(b.incomeTotal)}/dtk</span>}
                   </p>
+                  {/* Tombol upgrade (hanya jika dimiliki) */}
+                  {owned && b.upgradeCost != null && (
+                    <button onClick={() => doAction(() => gameAPI.upgradeBusiness(b.id), 'Gagal upgrade')}
+                      disabled={displayCash < b.upgradeCost}
+                      className={`mt-1.5 text-[10px] font-bold px-2 py-1 rounded-lg border transition-all ${
+                        displayCash >= b.upgradeCost ? 'bg-[#FFD700]/10 text-[#FFD700] border-[#FFD700]/30 hover:bg-[#FFD700]/20' : 'bg-white/3 text-[#4A6080] border-white/8 cursor-not-allowed'
+                      }`}>
+                      ⬆ Upgrade Lv.{b.level + 1} (+50%) · Rp {fmt(b.upgradeCost)}
+                    </button>
+                  )}
+                  {owned && b.upgradeCost == null && b.level >= b.maxLevel && (
+                    <span className="inline-block mt-1.5 text-[10px] text-[#00E676]">★ Level Maksimal</span>
+                  )}
                 </div>
                 <button onClick={() => buy(b.id)} disabled={!affordable || buying === b.id}
                   className={`shrink-0 px-4 py-2.5 rounded-xl font-bold text-xs transition-all flex items-center gap-1 ${
