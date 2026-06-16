@@ -12,6 +12,11 @@ const BLOG_SLUGS = [
   'strategi-crypto-trading',
   'dividen-saham-idx-terbaik',
   'panduan-trading-pemula',
+  'cara-membaca-candlestick',
+  'bollinger-bands-strategi',
+  'cara-main-saham-modal-kecil',
+  'bitcoin-crypto-untuk-pemula',
+  'manajemen-modal-trading',
 ];
 
 const EDUKASI_SLUGS = [
