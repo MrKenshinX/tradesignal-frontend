@@ -129,6 +129,10 @@ export const gameAPI = {
     const res = await api.post('/api/game/deposit/claim', { depositId });
     return res.data.data;
   },
+  leaderboard: async (period: 'daily' | 'monthly' | 'alltime') => {
+    const res = await api.get(`/api/game/leaderboard?period=${period}`);
+    return res.data.data;
+  },
 };
 
 // =============================================

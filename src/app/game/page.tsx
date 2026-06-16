@@ -4,7 +4,7 @@ import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
 import { AuthGuard } from '@/components/auth/AuthGuard';
 import { gameAPI } from '@/lib/api';
-import { Gamepad2, Wallet, TrendingUp, Trophy, ArrowRight, Zap, Loader2, Landmark, Lock, Building2 } from 'lucide-react';
+import { Gamepad2, Wallet, TrendingUp, Trophy, ArrowRight, Zap, Loader2, Landmark, Lock, Building2, Medal } from 'lucide-react';
 
 interface Business {
   id: string; name: string; emoji: string;
@@ -44,10 +44,13 @@ function GameContent() {
   const [loading, setLoading] = useState(true);
   const [buying, setBuying] = useState<string | null>(null);
   const [error, setError] = useState('');
-  const [tab, setTab] = useState<'bisnis' | 'bank'>('bisnis');
+  const [tab, setTab] = useState<'bisnis' | 'bank' | 'peringkat'>('bisnis');
   const [bankAmount, setBankAmount] = useState('');
   const [depositAmount, setDepositAmount] = useState('');
   const [depositTerm, setDepositTerm] = useState('d30m');
+  const [lbPeriod, setLbPeriod] = useState<'daily' | 'monthly' | 'alltime'>('daily');
+  const [lb, setLb] = useState<any>(null);
+  const [lbLoading, setLbLoading] = useState(false);
 
   const stateRef = useRef<GameState | null>(null);
   stateRef.current = state;
@@ -120,6 +123,18 @@ function GameContent() {
     }
   };
 
+  // Muat leaderboard saat tab peringkat aktif / ganti periode
+  useEffect(() => {
+    if (tab !== 'peringkat') return;
+    let cancelled = false;
+    setLbLoading(true);
+    gameAPI.leaderboard(lbPeriod)
+      .then(d => { if (!cancelled) setLb(d); })
+      .catch(() => { if (!cancelled) setLb(null); })
+      .finally(() => { if (!cancelled) setLbLoading(false); });
+    return () => { cancelled = true; };
+  }, [tab, lbPeriod]);
+
   if (loading) {
     return (
       <div className="min-h-screen bg-[#060B18] pt-24 flex items-center justify-center">
@@ -181,6 +196,10 @@ function GameContent() {
           <button onClick={() => setTab('bank')}
             className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl font-bold text-sm transition-all ${tab === 'bank' ? 'bg-[#00D4FF] text-[#060B18]' : 'bg-white/5 text-[#8BA8C2] border border-white/8'}`}>
             <Landmark size={15} /> Bank
+          </button>
+          <button onClick={() => setTab('peringkat')}
+            className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl font-bold text-sm transition-all ${tab === 'peringkat' ? 'bg-[#00D4FF] text-[#060B18]' : 'bg-white/5 text-[#8BA8C2] border border-white/8'}`}>
+            <Medal size={15} /> Peringkat
           </button>
         </div>
 
@@ -289,6 +308,59 @@ function GameContent() {
               <p className="text-[#4A6080] text-xs text-center py-2">Belum ada deposito aktif.</p>
             )}
           </div>
+        </div>
+        )}
+
+        {/* TAB: PERINGKAT */}
+        {tab === 'peringkat' && (
+        <div>
+          {/* Pilih periode */}
+          <div className="flex gap-2 mb-4">
+            {([['daily', 'Harian'], ['monthly', 'Bulanan'], ['alltime', 'Sepanjang Masa']] as const).map(([p, label]) => (
+              <button key={p} onClick={() => setLbPeriod(p)}
+                className={`flex-1 py-2 rounded-xl text-xs font-bold transition-all ${lbPeriod === p ? 'bg-[#FFD700]/15 text-[#FFD700] border border-[#FFD700]/30' : 'bg-white/3 text-[#8BA8C2] border border-white/8'}`}>
+                {label}
+              </button>
+            ))}
+          </div>
+
+          {/* Peringkat pemain sendiri */}
+          {lb?.me && (
+            <div className="mb-3 p-3 rounded-xl bg-[#00D4FF]/8 border border-[#00D4FF]/25 flex items-center justify-between">
+              <span className="text-[#00D4FF] text-sm font-bold">Peringkatmu: #{lb.me.rank}</span>
+              <span className="font-mono text-white text-sm">{lbPeriod === 'alltime' ? 'Kekayaan' : 'Profit'}: Rp {fmt(lb.me.score)}</span>
+            </div>
+          )}
+
+          {lbLoading ? (
+            <div className="flex justify-center py-8"><Loader2 className="animate-spin text-[#00D4FF]" size={24} /></div>
+          ) : !lb || lb.top.length === 0 ? (
+            <p className="text-[#4A6080] text-sm text-center py-8">
+              Belum ada data peringkat untuk periode ini.<br/>
+              <span className="text-[11px]">Main & kumpulkan kekayaan untuk masuk papan peringkat!</span>
+            </p>
+          ) : (
+            <div className="space-y-1.5">
+              {lb.top.map((row: any) => {
+                const medal = row.rank === 1 ? '🥇' : row.rank === 2 ? '🥈' : row.rank === 3 ? '🥉' : null;
+                return (
+                  <div key={row.rank + row.name} className={`flex items-center gap-3 p-3 rounded-xl border ${row.isMe ? 'bg-[#00D4FF]/10 border-[#00D4FF]/30' : 'bg-white/3 border-white/5'}`}>
+                    <div className="w-8 text-center shrink-0">
+                      {medal ? <span className="text-lg">{medal}</span> : <span className="text-[#4A6080] font-mono text-sm font-bold">#{row.rank}</span>}
+                    </div>
+                    <p className={`flex-1 min-w-0 truncate text-sm font-semibold ${row.isMe ? 'text-[#00D4FF]' : 'text-white'}`}>
+                      {row.name}{row.isMe && ' (kamu)'}
+                    </p>
+                    <p className="font-mono text-sm font-bold text-[#FFD700] shrink-0">Rp {fmt(row.score)}</p>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          <p className="text-[#4A6080] text-[10px] text-center mt-4">
+            {lbPeriod === 'alltime' ? 'Diurutkan dari total kekayaan.' : `Diurutkan dari profit ${lbPeriod === 'daily' ? 'hari' : 'bulan'} ini.`} Reset otomatis tiap periode.
+          </p>
         </div>
         )}
 
