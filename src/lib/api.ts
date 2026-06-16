@@ -165,6 +165,10 @@ export const gameAPI = {
     const res = await api.post('/api/game/shares/sell', { companyId, qty });
     return res.data;
   },
+  distributeDividend: async (companyId: number) => {
+    const res = await api.post('/api/game/company/dividend', { companyId });
+    return res.data;
+  },
 };
 
 // =============================================

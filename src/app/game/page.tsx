@@ -420,9 +420,16 @@ function GameContent() {
 
                   {/* IPO / status publik */}
                   {co.isPublic ? (
-                    <div className="mt-2 p-2.5 rounded-xl bg-[#00E676]/6 border border-[#00E676]/15 flex items-center justify-between">
-                      <span className="text-[#8BA8C2] text-[11px]">Harga saham</span>
-                      <span className="font-mono text-[#00E676] text-sm font-bold">Rp {fmt(co.sharePrice, 2)}</span>
+                    <div className="mt-2 space-y-2">
+                      <div className="p-2.5 rounded-xl bg-[#00E676]/6 border border-[#00E676]/15 flex items-center justify-between">
+                        <span className="text-[#8BA8C2] text-[11px]">Harga saham · {co.holders} pemegang</span>
+                        <span className="font-mono text-[#00E676] text-sm font-bold">Rp {fmt(co.sharePrice, 2)}</span>
+                      </div>
+                      <button onClick={() => doAction(async () => { const r = await gameAPI.distributeDividend(co.id); loadCompanies(); return await gameAPI.getState(); }, 'Gagal bagi dividen')}
+                        disabled={co.treasury < 1}
+                        className={`w-full py-2 rounded-xl font-bold text-xs ${co.treasury >= 1 ? 'bg-[#00D4FF]/15 text-[#00D4FF] border border-[#00D4FF]/30 hover:bg-[#00D4FF]/25' : 'bg-white/3 text-[#4A6080] border border-white/8 cursor-not-allowed'}`}>
+                        💰 Bagikan Dividen (Rp {fmt(co.treasury)} dari kas → pemegang saham)
+                      </button>
                     </div>
                   ) : co.canIpo ? (
                     <button onClick={() => doAction(async () => { await gameAPI.ipoCompany(co.id); loadCompanies(); return await gameAPI.getState(); }, 'Gagal IPO')}
