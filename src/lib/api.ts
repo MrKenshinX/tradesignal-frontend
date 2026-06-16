@@ -153,6 +153,18 @@ export const gameAPI = {
     const res = await api.post('/api/game/company/ipo', { companyId });
     return res.data.data;
   },
+  getMarket: async () => {
+    const res = await api.get('/api/game/market');
+    return res.data.data;
+  },
+  buyShares: async (companyId: number, qty: number) => {
+    const res = await api.post('/api/game/shares/buy', { companyId, qty });
+    return res.data;
+  },
+  sellShares: async (companyId: number, qty: number) => {
+    const res = await api.post('/api/game/shares/sell', { companyId, qty });
+    return res.data;
+  },
 };
 
 // =============================================

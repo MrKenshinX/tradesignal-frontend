@@ -4,7 +4,7 @@ import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
 import { AuthGuard } from '@/components/auth/AuthGuard';
 import { gameAPI } from '@/lib/api';
-import { Gamepad2, Wallet, TrendingUp, Trophy, ArrowRight, Zap, Loader2, Landmark, Lock, Building2, Medal, Briefcase } from 'lucide-react';
+import { Gamepad2, Wallet, TrendingUp, Trophy, ArrowRight, Zap, Loader2, Landmark, Lock, Building2, Medal, Briefcase, LineChart } from 'lucide-react';
 
 interface Business {
   id: string; name: string; emoji: string;
@@ -45,7 +45,7 @@ function GameContent() {
   const [loading, setLoading] = useState(true);
   const [buying, setBuying] = useState<string | null>(null);
   const [error, setError] = useState('');
-  const [tab, setTab] = useState<'bisnis' | 'bank' | 'perusahaan' | 'peringkat'>('bisnis');
+  const [tab, setTab] = useState<'bisnis' | 'bank' | 'perusahaan' | 'bursa' | 'peringkat'>('bisnis');
   const [bankAmount, setBankAmount] = useState('');
   const [depositAmount, setDepositAmount] = useState('');
   const [depositTerm, setDepositTerm] = useState('d30m');
@@ -55,6 +55,9 @@ function GameContent() {
   const [companies, setCompanies] = useState<any[]>([]);
   const [coLoading, setCoLoading] = useState(false);
   const [newCoName, setNewCoName] = useState('');
+  const [market, setMarket] = useState<any[]>([]);
+  const [mktLoading, setMktLoading] = useState(false);
+  const [tradeQty, setTradeQty] = useState<Record<number, string>>({});
 
   const stateRef = useRef<GameState | null>(null);
   stateRef.current = state;
@@ -151,6 +154,18 @@ function GameContent() {
     return () => clearInterval(id);
   }, [tab, loadCompanies]);
 
+  // Muat bursa saham saat tab bursa aktif (refresh tiap 5 dtk)
+  const loadMarket = useCallback(() => {
+    gameAPI.getMarket().then(setMarket).catch(() => {});
+  }, []);
+  useEffect(() => {
+    if (tab !== 'bursa') return;
+    setMktLoading(true);
+    gameAPI.getMarket().then(setMarket).catch(() => {}).finally(() => setMktLoading(false));
+    const id = setInterval(loadMarket, 5000);
+    return () => clearInterval(id);
+  }, [tab, loadMarket]);
+
   if (loading) {
     return (
       <div className="min-h-screen bg-[#060B18] pt-24 flex items-center justify-center">
@@ -216,6 +231,10 @@ function GameContent() {
           <button onClick={() => setTab('perusahaan')}
             className={`flex-1 min-w-[90px] flex items-center justify-center gap-1.5 py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all ${tab === 'perusahaan' ? 'bg-[#00D4FF] text-[#060B18]' : 'bg-white/5 text-[#8BA8C2] border border-white/8'}`}>
             <Briefcase size={14} /> Perusahaan
+          </button>
+          <button onClick={() => setTab('bursa')}
+            className={`flex-1 min-w-[75px] flex items-center justify-center gap-1.5 py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all ${tab === 'bursa' ? 'bg-[#00D4FF] text-[#060B18]' : 'bg-white/5 text-[#8BA8C2] border border-white/8'}`}>
+            <LineChart size={14} /> Bursa
           </button>
           <button onClick={() => setTab('peringkat')}
             className={`flex-1 min-w-[90px] flex items-center justify-center gap-1.5 py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all ${tab === 'peringkat' ? 'bg-[#00D4FF] text-[#060B18]' : 'bg-white/5 text-[#8BA8C2] border border-white/8'}`}>
@@ -416,6 +435,64 @@ function GameContent() {
                 </div>
               ))}
             </div>
+          )}
+        </div>
+        )}
+
+        {/* TAB: BURSA SAHAM */}
+        {tab === 'bursa' && (
+        <div className="space-y-3">
+          <div className="p-3 rounded-xl bg-[#7B2FFF]/8 border border-[#7B2FFF]/20 mb-1">
+            <p className="text-[#8BA8C2] text-[11px]">📊 Beli saham perusahaan publik. Harga naik saat dibeli, turun saat dijual (market-maker). Pegang saham untuk dapat dividen nanti.</p>
+          </div>
+          {mktLoading ? (
+            <div className="flex justify-center py-8"><Loader2 className="animate-spin text-[#00D4FF]" size={24} /></div>
+          ) : market.length === 0 ? (
+            <p className="text-[#4A6080] text-sm text-center py-8">
+              Belum ada perusahaan yang IPO.<br/>
+              <span className="text-[11px]">Dirikan perusahaan, naikkan ke Level 3, lalu IPO untuk muncul di bursa!</span>
+            </p>
+          ) : (
+            market.map(co => {
+              const qty = tradeQty[co.id] || '';
+              const q = parseInt(qty) || 0;
+              return (
+                <div key={co.id} className="p-4 rounded-2xl glass border border-white/8">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <p className="text-white font-bold text-sm truncate">{co.name}</p>
+                        <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-[#FFD700]/10 text-[#FFD700] border border-[#FFD700]/20">Lv.{co.level}</span>
+                        {co.isMine && <span className="text-[10px] px-1.5 py-0.5 rounded bg-[#7B2FFF]/15 text-[#a875ff] border border-[#7B2FFF]/25">Punyamu</span>}
+                      </div>
+                      <p className="text-[#4A6080] text-[10px] mt-0.5">oleh {co.ownerName} · +Rp {fmt(co.revenuePerSec)}/dtk</p>
+                    </div>
+                    <div className="text-right shrink-0">
+                      <p className="font-mono font-black text-[#00E676]">Rp {fmt(co.price, 2)}</p>
+                      <p className="text-[#4A6080] text-[10px]">/saham</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 text-[10px] text-[#8BA8C2] mb-2">
+                    <span>Sahammu: <b className="text-white font-mono">{fmt(co.myShares)}</b></span>
+                    <span>·</span>
+                    <span>Tersedia: <b className="text-white font-mono">{fmt(co.available)}</b></span>
+                  </div>
+                  <div className="flex gap-2">
+                    <input type="number" value={qty} onChange={e => setTradeQty(p => ({ ...p, [co.id]: e.target.value }))}
+                      placeholder="Jml saham"
+                      className="flex-1 px-3 py-2 rounded-xl bg-white/5 border border-white/10 text-white font-mono text-sm focus:outline-none focus:border-[#00D4FF]/50" />
+                    <button onClick={() => { if (q > 0) doAction(async () => { const r = await gameAPI.buyShares(co.id, q); setMarket(r.market); setTradeQty(p => ({ ...p, [co.id]: '' })); return await gameAPI.getState(); }, 'Gagal beli'); }}
+                      className="px-3 py-2 rounded-xl bg-[#00E676] text-[#060B18] font-bold text-xs hover:opacity-90">Beli</button>
+                    <button onClick={() => { if (q > 0) doAction(async () => { const r = await gameAPI.sellShares(co.id, q); setMarket(r.market); setTradeQty(p => ({ ...p, [co.id]: '' })); return await gameAPI.getState(); }, 'Gagal jual'); }}
+                      disabled={co.myShares <= 0}
+                      className={`px-3 py-2 rounded-xl font-bold text-xs ${co.myShares > 0 ? 'bg-[#FF4757] text-white hover:opacity-90' : 'bg-white/5 text-[#4A6080] cursor-not-allowed'}`}>Jual</button>
+                  </div>
+                  {q > 0 && (
+                    <p className="text-[#4A6080] text-[10px] mt-1.5 text-center">≈ Rp {fmt(q * co.price)} untuk {fmt(q)} saham (harga bergerak saat transaksi)</p>
+                  )}
+                </div>
+              );
+            })
           )}
         </div>
         )}
